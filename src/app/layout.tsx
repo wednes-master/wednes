@@ -4,12 +4,38 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header'; // 새로 생성할 Header 컴포넌트 임포트
 import Footer from '@/components/Footer'; // 새로 생성할 Footer 컴포넌트 임포트
 
+// 배포 도메인으로 교체하세요 (예: https://wednes.dev)
+const baseUrl = 'https://your-domain.example';
+const ogImagePath = '/og/wednes-symbol.png'; // /public/og/wednes-symbol.png
+
 export const metadata: Metadata = {
   title: 'wednes',
   description: '로스트아크 다양한 정보 제공',
+  metadataBase: new URL(baseUrl),
+  openGraph: {
+    type: 'website',
+    url: '/',
+    title: 'wednes',
+    siteName: 'wednes',
+    description: '로스트아크 다양한 정보 제공',
+    images: [
+      {
+        url: ogImagePath, // 절대 URL로 변환됨 (metadataBase 기준)
+        width: 1200,
+        height: 630,
+        alt: 'wednes symbol',
+      },
+    ],
+    locale: 'ko_KR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'wednes',
+    description: '로스트아크 다양한 정보 제공',
+    images: [ogImagePath],
+  },
 };
 
-// 모든 페이지에 적용되는 최상위 레이아웃
 export default function RootLayout({
   children,
 }: Readonly<{

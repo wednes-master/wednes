@@ -16,7 +16,7 @@ export default function EventsCard({ events }: Props) {
 
   return (
     // 모바일 1열, md부터 2열로 확장
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-3">
       {events.map((item, idx) => {
         const link = typeof item.Link === 'string' ? item.Link : undefined;
         const thumbnailUrl = item.Thumbnail;
@@ -30,7 +30,7 @@ export default function EventsCard({ events }: Props) {
               alt="이벤트 이미지"
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover"
+              className="object-unset"
               priority={idx < 3}
             />
           </div>

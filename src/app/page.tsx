@@ -29,7 +29,7 @@ export default async function HomePage() {
 
   try {
     [notices, events, calendar] = await Promise.all([
-      getLostarkNotices(6), // 10개
+      getLostarkNotices(5), // 10개
       getLostarkEvents(6),  // 10개
       getLostarkGameCalendar(),
     ]);

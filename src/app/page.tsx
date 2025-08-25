@@ -25,21 +25,18 @@ import UpdatesCard from '@/components/cards/UpdatesCard';
 export default async function HomePage() {
   let notices: LostarkNotice[] = [];
   let events: LostarkEvent[] = [];
-  let alarms: LostarkAlarmItem[] = [];
   let calendar: LostarkGameContent[] = [];
 
   try {
-    [notices, events, alarms, calendar] = await Promise.all([
+    [notices, events, calendar] = await Promise.all([
       getLostarkNotices(6), // 10개
       getLostarkEvents(6),  // 10개
-      getLostarkAlarms(6),  // 필요 시 사용
       getLostarkGameCalendar(),
     ]);
   } catch (error) {
     console.error('Failed to fetch all data:', error);
     notices = [];
     events = [];
-    alarms = [];
     calendar = [];
   }
 

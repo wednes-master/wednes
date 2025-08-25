@@ -17,19 +17,13 @@ export default function UpdatesCard({ events }: Props) {
   return (
     <ul className="space-y-3">
       {events.map((item, idx) => {
-        const title =
-          'Title' in item && typeof (item as any).Title === 'string'
-            ? (item as any).Title
-            : '업데이트';
+        const title = item.Title || '업데이트';
         const link = typeof item.Link === 'string' ? item.Link : undefined;
 
         // 날짜가 필요하면 아래 로직을 사용하세요.
-        let displayDate = '';
-        if (typeof item.StartDate === 'string') {
-          displayDate = new Date(item.StartDate).toLocaleDateString('ko-KR');
-        } else if (typeof (item as any).Date === 'string') {
-          displayDate = new Date((item as any).Date).toLocaleDateString('ko-KR');
-        }
+        const displayDate = item.StartDate
+          ? new Date(item.StartDate).toLocaleDateString('ko-KR')
+          : '';
 
         return (
           <li key={idx} className="flex flex-col">

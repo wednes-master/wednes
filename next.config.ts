@@ -9,10 +9,14 @@ const nextConfig: NextConfig = {
 
   // images 설정을 추가합니다.
   images: {
-    domains: [
-      'cdn-lostark.game.onstove.com', // 로스트아크 이미지 CDN 도메인
-      // 'img.youtube.com', // 만약 유튜브 썸네일 등을 사용할 경우 추가 (예시)
-      // 'another.example.com', // 다른 이미지 호스팅 도메인이 있다면 여기에 추가
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn-lostark.game.onstove.com',
+        pathname: '/**',
+      },
+      // 필요시 추가 예시
+      // { protocol: 'https', hostname: 'img.youtube.com', pathname: '/**' },
     ],
   },
 

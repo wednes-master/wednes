@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 
 // ======================================================
 // 공통 유틸
@@ -73,11 +74,12 @@ type GameTimersProps = {
 };
 
 function useTick(intervalMs = 1000) {
-  const [, setT] = useState(0);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setT((x) => x + 1), intervalMs);
+    const id = setInterval(() => setTick((x) => x + 1), intervalMs);
     return () => clearInterval(id);
   }, [intervalMs]);
+  return tick;
 }
 
 function now(forceSeoul?: boolean) {
@@ -216,14 +218,14 @@ export default function GameTimers(props: GameTimersProps) {
     forceSeoulTime = true,
   } = props;
 
-  useTick(1000);
+  const tick = useTick(1000);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
   // 마운트 전에는 고정된 기준 시각을 사용해 SSR/CSR 불일치 방지
-  const n = mounted ? now(forceSeoulTime) : new Date(0);
+  const n = useMemo(() => (mounted ? now(forceSeoulTime) : new Date(0)), [mounted, forceSeoulTime, tick]);
 
   // 모험섬
   const adventure = useMemo(() => {
@@ -278,36 +280,39 @@ export default function GameTimers(props: GameTimersProps) {
       <div className="flex flex-wrap items-center gap-4 justify-center">
         {/* 모험섬 */}
         <div className="flex items-center gap-2">
-          <img
+          <Image
             src={adventureIconSrc}
             alt="모험섬"
             width={20}
             height={20}
-            style={{ objectFit: 'contain' }}
+            className="object-contain"
+            priority={false}
           />
           <span className={`text-sm font-bold ${adventure.color}`}>{adventure.label}</span>
         </div>
 
         {/* 필드보스 */}
         <div className="flex items-center gap-2">
-          <img
+          <Image
             src={fieldBossIconSrc}
             alt="필드보스"
             width={20}
             height={20}
-            style={{ objectFit: 'contain' }}
+            className="object-contain"
+            priority={false}
           />
           <span className={`text-sm font-bold ${fieldBoss.color}`}>{fieldBoss.label}</span>
         </div>
 
         {/* 카오스게이트(선택) */}
         <div className="flex items-center gap-2">
-          <img
+          <Image
             src={chaosGateIconSrc}
             alt="카오스게이트"
             width={20}
             height={20}
-            style={{ objectFit: 'contain' }}
+            className="object-contain"
+            priority={false}
           />
           <span className={`text-sm font-bold ${chaos.color}`}>{chaos.label}</span>
         </div>

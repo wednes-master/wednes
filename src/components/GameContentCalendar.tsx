@@ -12,15 +12,34 @@ interface Props {
 }
 
 const nextAdventureTimeGetter = () => {
-  // 여기에 실제 모험섬 일정 계산 로직을 넣으세요.
-  // 예시: 매일 20:00에 등장한다고 가정
+  // 규칙
+  // - 평일(월~금): 11:00, 13:00, 19:00, 21:00, 23:00
+  // - 주말(토, 일): 09:00, 11:00, 13:00, 19:00, 21:00, 23:00
   const now = new Date();
-  const base = new Date(now);
-  base.setSeconds(0, 0);
-  base.setMinutes(0);
-  base.setHours(20);
-  if (base <= now) base.setDate(base.getDate() + 1);
-  return base;
+  const day = now.getDay(); // 0:일, 6:토
+  const isWeekend = day === 0 || day === 6;
+  const weekdayHours = [11, 13, 19, 21, 23];
+  const weekendHours = [9, 11, 13, 19, 21, 23];
+  const schedule = isWeekend ? weekendHours : weekdayHours;
+
+  const todayCandidates = schedule
+    .map((h) => {
+      const d = new Date(now);
+      d.setHours(h, 0, 0, 0);
+      return d;
+    })
+    .filter((d) => d.getTime() > now.getTime())
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  if (todayCandidates.length > 0) return todayCandidates[0];
+
+  // 오늘 이후가 없으면 내일 첫 스폰 시간
+  const nextDay = new Date(now);
+  nextDay.setDate(nextDay.getDate() + 1);
+  const nextDayIsWeekend = nextDay.getDay() === 0 || nextDay.getDay() === 6;
+  const nextSchedule = nextDayIsWeekend ? weekendHours : weekdayHours;
+  nextDay.setHours(nextSchedule[0], 0, 0, 0);
+  return nextDay;
 };
 
 export default function GameContentCalendar({ calendar }: Props) {

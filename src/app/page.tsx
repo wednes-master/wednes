@@ -1,103 +1,115 @@
-import Image from "next/image";
+// src/app/page.tsx
+import Link from 'next/link';
+import Image from 'next/image';
+import Card from '@/components/Card';
+import GameContentCalendar from '@/components/GameContentCalendar';
 
-export default function Home() {
+import {
+  getLostarkNotices,
+  getLostarkEvents,
+  getLostarkAlarms,
+  getLostarkGameCalendar,
+} from '@/app/lib/api';
+
+import type {
+  LostarkNotice,
+  LostarkEvent,
+  LostarkAlarmItem,
+  LostarkGameContent,
+} from '@/types/lostark';
+
+import NoticesCard from '@/components/cards/NoticesCard';
+import EventsCard from '@/components/cards/EventsCard';
+import UpdatesCard from '@/components/cards/UpdatesCard';
+
+export default async function HomePage() {
+  let notices: LostarkNotice[] = [];
+  let events: LostarkEvent[] = [];
+  let alarms: LostarkAlarmItem[] = [];
+  let calendar: LostarkGameContent[] = [];
+
+  try {
+    [notices, events, alarms, calendar] = await Promise.all([
+      getLostarkNotices(6), // 10개
+      getLostarkEvents(6),  // 10개
+      getLostarkAlarms(6),  // 필요 시 사용
+      getLostarkGameCalendar(),
+    ]);
+  } catch (error) {
+    console.error('Failed to fetch all data:', error);
+    notices = [];
+    events = [];
+    alarms = [];
+    calendar = [];
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+    <section className="relative max-w-[1216px] mx-auto px-3 sm:px-4">
+      {/* 상단 배너 */}
+      <div className="w-full relative mt-3 rounded-xl overflow-hidden h-[140px] sm:h-[200px]">
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
+          src="/summer.png"
+          alt="상단 배너"
+          fill
+          className="object-cover"
           priority
         />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly. 222
-          </li>
-        </ol>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* 좌/우 광고 (유지) */}
+      <aside className="hidden lg:flex fixed left-20 top-1/2 -translate-y-1/2 w-[200px] h-[600px] bg-gray-400 items-center justify-center rounded-md shadow-md">
+        광고 200x600
+      </aside>
+      <aside className="hidden lg:flex fixed right-20 top-1/2 -translate-y-1/2 w-[200px] h-[600px] bg-gray-400 items-center justify-center rounded-md shadow-md">
+        광고 200x600
+      </aside>
+
+      <div className="max-w-[1216px] mx-auto flex flex-col gap-3">
+        {/* 게임 캘린더 */}
+        <GameContentCalendar calendar={calendar} />
+
+        {/* 공지 · 이벤트(이미지만) · 업데이트 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* 공지사항 */}
+          <Card className="text-left">
+            <h3 className="text-xl font-semibold mb-4 text-brand-primary">
+              <Link
+                href="https://lostark.game.onstove.com/News/Notice/List"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                공지사항
+              </Link>
+            </h3>
+            <div className="max-h-[360px] overflow-y-auto pr-2 text-explan-color">
+              <NoticesCard notices={notices} />
+            </div>
+          </Card>
+
+          {/* 이벤트(이미지 그리드만, 스크롤바 숨김 + 페이드) */}
+          <Card className="text-left">
+            <div className="relative max-h-[360px] overflow-y-auto pr-2 scroll-invisible has-fade-overlay">
+              <EventsCard events={events} />
+            </div>
+          </Card>
+
+          {/* 업데이트 */}
+          <Card className="text-left">
+            <h3 className="text-xl font-semibold mb-4 text-brand-primary">
+              <Link
+                href="https://lostark.game.onstove.com/News/Update/List"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                업데이트
+              </Link>
+            </h3>
+            <div className="max-h-[360px] overflow-y-auto pr-2 text-explan-color">
+              <UpdatesCard events={events} />
+            </div>
+          </Card>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </section>
   );
 }

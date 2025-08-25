@@ -5,7 +5,7 @@ import Header from '@/components/Header'; // 새로 생성할 Header 컴포넌�
 import Footer from '@/components/Footer'; // 새로 생성할 Footer 컴포넌트 임포트
 
 export const metadata: Metadata = {
-  title: '로요일 웬즈',
+  title: 'wednes',
   description: '로스트아크 다양한 정보 제공',
 };
 

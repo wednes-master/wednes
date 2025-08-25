@@ -7,84 +7,8 @@ import Card from './Card';
 import type { LostarkGameContent, GameContentRewardItem } from '@/types/lostark';
 import GameTimers from '@/components/GameTimers';
 
-const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
-
 interface Props {
   calendar: LostarkGameContent[];
-}
-
-const gradeColors: Record<string, string> = {
-  '일반': 'text-gray-400',
-  '고급': 'text-green-400',
-  '희귀': 'text-blue-400',
-  '영웅': 'text-purple-400',
-  '전설': 'text-yellow-400',
-  '유물': 'text-orange-400',
-  '고대': 'text-red-400',
-};
-
-// 시간 카운트다운을 계산하고 표시하는 헬퍼 컴포넌트
-function TimeCountdown({ content }: { content: LostarkGameContent }) {
-  const [remainingTime, setRemainingTime] = useState<string | null>(null);
-  const [currentDisplayTime, setCurrentDisplayTime] = useState<Date>(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDisplayTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = currentDisplayTime;
-      const currentHour = now.getHours();
-
-      const relevantTimes = content.StartTimes
-        .filter(timeStr => new Date(timeStr).getDay() === now.getDay())
-        .map(timeStr => new Date(timeStr));
-      
-      let nextAppearanceTime: Date | undefined;
-      
-      if (currentHour >= 23) {
-          setRemainingTime("오늘 일정 종료");
-          return;
-      }
-      
-      for (const time of relevantTimes.sort((a, b) => a.getTime() - b.getTime())) {
-          if (time.getTime() > now.getTime()) {
-              nextAppearanceTime = time;
-              break;
-          }
-      }
-
-      if (nextAppearanceTime) {
-        const diffSeconds = Math.max(0, (nextAppearanceTime.getTime() - now.getTime()) / 1000);
-      
-        const hours = Math.floor(diffSeconds / 3600);
-        const minutes = Math.floor((diffSeconds % 3600) / 60);
-        const seconds = Math.floor(diffSeconds % 60);
-      
-        // 여기만 변경: 00:00:00 형식
-        const timeString =
-          `${hours.toString().padStart(2, '0')}:` +
-          `${minutes.toString().padStart(2, '0')}:` +
-          `${seconds.toString().padStart(2, '0')}`;
-      
-        setRemainingTime(timeString);
-      } else {
-        setRemainingTime("오늘 일정 없음");
-      }
-    };
-
-    updateCountdown();
-  }, [currentDisplayTime, content.StartTimes]);
-
-  return (
-    <span className="text-sm font-bold text-yellow-400">
-      {remainingTime === null ? '계산 중...' : remainingTime}
-    </span>
-  );
 }
 
 const nextAdventureTimeGetter = () => {
@@ -168,23 +92,11 @@ function getChaosGateTimeRemaining(): string {
 }
 
 export default function GameContentCalendar({ calendar }: Props) {
-  const [selectedDay, setSelectedDay] = useState(new Date().getDay());
-  const [chaosGateTime, setChaosGateTime] = useState<string>('미출현');
+  const [selectedDay] = useState(new Date().getDay());
+  const [setChaosGateTime] = useState<string>('미출현');
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  // 카오스게이트 시간 업데이트
-  useEffect(() => {
-    const updateChaosGateTime = () => {
-      setChaosGateTime(getChaosGateTimeRemaining());
-    };
-
-    updateChaosGateTime();
-    const interval = setInterval(updateChaosGateTime, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // 현재 주의 모든 날짜 (Date 객체) 계산
   const weeklyDates: Date[] = [];
@@ -216,70 +128,6 @@ export default function GameContentCalendar({ calendar }: Props) {
     if (!rewards) return [];
     return rewards.flatMap(itemLevelGroup => itemLevelGroup.Items);
   };
-
-  const isSameDay = (d1: Date, d2: Date) => {
-    return d1.getFullYear() === d2.getFullYear() &&
-           d1.getMonth() === d2.getMonth() &&
-           d1.getDate() === d2.getDate();
-  };
-
-  // ★★★ 최상단 단일 시간 계산 로직 시작 ★★★
-  const allStartTimesForSelectedDay: string[] = [];
-  dayContents.forEach(content => {
-    content.StartTimes.forEach(time => {
-      if (new Date(time).getDay() === selectedDay) {
-        allStartTimesForSelectedDay.push(time);
-      }
-    });
-  });
-
-  const sortedUniqueTimes = [...new Set(allStartTimesForSelectedDay)]
-    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-
-  let globalTimeDisplay = '';
-  let globalTimeContentForCountdown: LostarkGameContent | null = null;
-
-  if (selectedDay === today.getDay()) {
-    // 오늘 날짜라면 가장 가까운 다음 시간까지 카운트다운
-    const now = new Date();
-    const currentHour = now.getHours();
-
-    if (currentHour >= 23) {
-      globalTimeDisplay = "오늘 모험섬 일정 종료";
-    } else {
-      let nextUpcomingTime: string | undefined;
-      for (const timeStr of sortedUniqueTimes) {
-        const time = new Date(timeStr);
-        if (time.getTime() > now.getTime()) {
-          nextUpcomingTime = timeStr;
-          break;
-        }
-      }
-
-      if (nextUpcomingTime) {
-        globalTimeContentForCountdown = {
-            CategoryName: '모험 섬',
-            ContentsName: '다음 모험섬',
-            ContentsIcon: '',
-            MinItemLevel: 0,
-            Location: '',
-            RewardItems: [],
-            StartTimes: [nextUpcomingTime]
-        };
-      } else {
-        globalTimeDisplay = "오늘 모험섬 일정 없음";
-      }
-    }
-  } else {
-    // 오늘 날짜가 아니라면 해당 요일의 첫 번째 시간을 표시
-    if (sortedUniqueTimes.length > 0) {
-      const firstTime = new Date(sortedUniqueTimes[0]);
-      globalTimeDisplay = `${firstTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
-    } else {
-      globalTimeDisplay = "해당 요일 모험섬 일정 없음";
-    }
-  }
-  // ★★★ 최상단 단일 시간 계산 로직 끝 ★★★
 
   return (
     <Card className="mt-3 text-left">

@@ -1,25 +1,37 @@
 // src/components/Header.tsx
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
+// any 제거 + clean timeout 관리
 function useToast() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const timeoutRef = useRef<number | null>(null);
 
   const show = useCallback((msg: string, duration = 2000) => {
     setMessage(msg);
     setOpen(true);
-    window.clearTimeout((show as any)._t);
-    (show as any)._t = window.setTimeout(() => setOpen(false), duration);
+
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = window.setTimeout(() => {
+      setOpen(false);
+      timeoutRef.current = null;
+    }, duration);
   }, []);
 
+  // cleanup 전용 effect: 의존성 없음이 안전합니다.
   useEffect(() => {
     return () => {
-      window.clearTimeout((show as any)._t);
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 
@@ -45,7 +57,7 @@ export default function Header() {
     toast.show('준비중입니다');
   };
 
-  const handleToolsClick = (e?: React.MouseEvent) => {
+  const handleToolsClick = (e?: React.MouseEvent<HTMLAnchorElement>) => {
     if (e) e.preventDefault(); // 링크 이동 막기
     toast.show('준비중입니다'); // 토스트 노출
   };
@@ -101,9 +113,8 @@ export default function Header() {
       {/* PC 네비게이션 */}
       <nav className="hidden md:block max-w-[1216px] mx-auto py-2 px-4 sm:px-6">
         <ul className="flex justify-start space-x-8 font-semibold text-base items-center text-explan-color">
-        {navItems.map(({ href, label }) => {
+          {navItems.map(({ href, label }) => {
             const isActive = pathname === href || (pathname === '/' && href === '/home');
-
             const isTools = href === '/tools';
             return (
               <li key={href}>
@@ -151,6 +162,7 @@ export default function Header() {
           <ul className="flex flex-col flex-grow text-xl font-medium text-text-primary">
             {navItems.map(({ href, label }, index, arr) => {
               const isActive = pathname === href || (pathname === '/' && href === '/home');
+              const isTools = href === '/tools';
               return (
                 <li
                   key={href}
@@ -158,7 +170,15 @@ export default function Header() {
                 >
                   <Link
                     href={href}
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={(e) => {
+                      if (isTools) {
+                        e.preventDefault();
+                        setIsMenuOpen(false);
+                        toast.show('준비중입니다');
+                      } else {
+                        setIsMenuOpen(false);
+                      }
+                    }}
                     className={[
                       'block py-4 transition-colors duration-200',
                       isActive ? 'text-sub-color' : '',
@@ -208,7 +228,6 @@ function Toast({ open, message }: { open: boolean; message: string }) {
         ].join(' ')}
       >
         <div className="rounded-lg bg-[rgba(30,30,30,0.92)] text-white shadow-lg backdrop-blur px-4 py-3 flex items-center gap-3">
-          {/* 아이콘(선택) */}
           <svg
             className="w-5 h-5 text-emerald-400 shrink-0"
             viewBox="0 0 24 24"

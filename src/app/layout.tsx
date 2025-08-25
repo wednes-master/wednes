@@ -5,7 +5,7 @@ import Header from '@/components/Header'; // 새로 생성할 Header 컴포넌�
 import Footer from '@/components/Footer'; // 새로 생성할 Footer 컴포넌트 임포트
 
 // 배포 도메인으로 교체하세요 (예: https://wednes.dev)
-const baseUrl = 'https://your-domain.example';
+const baseUrl = 'http://hyeok.io';
 const ogImagePath = '/og/wednes-symbol.png'; // /public/og/wednes-symbol.png
 
 export const metadata: Metadata = {

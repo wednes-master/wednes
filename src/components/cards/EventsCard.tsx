@@ -60,16 +60,7 @@ export default function EventsCard({ events }: Props) {
       </div>
       
       {/* 하단 페이드 효과 - 슬라이드임을 알려주는 그라데이션 */}
-      <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-zinc-900 via-zinc-900/90 to-transparent pointer-events-none rounded-b-lg" />
-      
-      {/* 추가적인 시각적 힌트 - 작은 화살표 아이콘 */}
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 pointer-events-none">
-        <div className="w-6 h-6 bg-zinc-800/80 rounded-full flex items-center justify-center">
-          <svg className="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
-      </div>
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-zinc-900/60 via-zinc-900/30 to-transparent pointer-events-none rounded-b-lg" />
     </div>
   );
 }

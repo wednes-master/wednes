@@ -242,11 +242,11 @@ export default function ToolsPage() {
               className="flex-1 rounded-md bg-zinc-900 border border-zinc-700 px-3 py-2 pr-8 text-sm"
             />
 
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as CategoryKey)}
-                className="rounded-md bg-zinc-900 border border-zinc-700 px-3 py-2 pr-10 text-sm appearance-none"
+                className="w-full rounded-md bg-zinc-900 border border-zinc-700 px-3 py-2 pr-10 text-sm appearance-none"
               >
                 <option value="all">전체</option>
                 <option value="enhancement">강화재료 (융화)</option>

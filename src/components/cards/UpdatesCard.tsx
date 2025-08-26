@@ -21,8 +21,9 @@ export default function UpdatesCard({ events }: Props) {
   }
 
   return (
-    <div className="space-y-3 max-h-72 overflow-y-auto custom-scrollbar">
-      {events.map((event, idx) => {
+    <div className="relative">
+      <div className="space-y-3 max-h-72 overflow-y-auto custom-scrollbar">
+        {events.map((event, idx) => {
         const link = typeof event.Link === 'string' ? event.Link : undefined;
 
         const content = (
@@ -59,6 +60,10 @@ export default function UpdatesCard({ events }: Props) {
           </div>
         );
       })}
+      </div>
+      
+      {/* 하단 페이드 효과 - 슬라이드임을 알려주는 그라데이션 */}
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-zinc-900/60 via-zinc-900/30 to-transparent pointer-events-none rounded-b-lg" />
     </div>
   );
 }

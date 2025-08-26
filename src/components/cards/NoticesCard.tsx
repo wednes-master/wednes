@@ -22,8 +22,9 @@ export default function NoticesCard({ notices }: Props) {
   }
 
   return (
-    <div className="space-y-3 max-h-72 overflow-y-auto custom-scrollbar">
-      {notices.map((notice, idx) => {
+    <div className="relative">
+      <div className="space-y-3 max-h-72 overflow-y-auto custom-scrollbar">
+        {notices.map((notice, idx) => {
         const link = typeof notice.Link === 'string' ? notice.Link : undefined;
         const thumbnailUrl = notice.Thumbnail;
 
@@ -78,6 +79,10 @@ export default function NoticesCard({ notices }: Props) {
           </div>
         );
       })}
+      </div>
+      
+      {/* 하단 페이드 효과 - 슬라이드임을 알려주는 그라데이션 */}
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-zinc-900/60 via-zinc-900/30 to-transparent pointer-events-none rounded-b-lg" />
     </div>
   );
 }

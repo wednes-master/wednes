@@ -72,7 +72,8 @@ export default function Header() {
         </Link>
 
         <div className="flex items-center">
-          <button
+          {/* PC 로그인 버튼 - 임시 숨김 */}
+          {/* <button
             type="button"
             className="
               hidden md:block
@@ -91,7 +92,7 @@ export default function Header() {
             onClick={handleLoginClick}
           >
             로그인
-          </button>
+          </button> */}
 
           <button
             type="button"
@@ -249,8 +250,8 @@ export default function Header() {
               </ul>
             </div>
 
-            {/* 로그인 버튼 영역 */}
-            <div className="p-4 border-t border-zinc-700/50">
+            {/* 로그인 버튼 영역 - 임시 숨김 */}
+            {/* <div className="p-4 border-t border-zinc-700/50">
               <button
                 type="button"
                 className="w-full bg-[#bb86fc] text-white font-semibold rounded-xl py-4 hover:bg-[#a66ffc] transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
@@ -258,7 +259,7 @@ export default function Header() {
               >
                 로그인 / 회원가입
               </button>
-            </div>
+            </div> */}
           </div>
         </nav>
       </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveMarketItemDetailToDB, saveApiLogToDB } from '@/app/lib/api';
-import { executeQuery, updateData } from '@/app/lib/database';
+import { executeQuery } from '@/app/lib/database';
 
 const BASE_URL = 'https://developer-lostark.game.onstove.com';
 
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
 }
 
 // 간단한 메모리 캐시
-const cache = new Map<string, { data: any; timestamp: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION = 30000; // 30초
 
 // 마켓 검색 - 데이터베이스에서 조회
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
           WHERE 1=1
         `;
         
-        const params: any[] = [];
+        const params: (string | number)[] = [];
         
         // 카테고리 필터 (인덱스 활용)
         if (CategoryCode) {

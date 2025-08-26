@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { testConnection } from '@/app/lib/database';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const isConnected = await testConnection();
     

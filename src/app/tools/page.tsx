@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Card from '@/components/Card';
-import type { MarketItemListEntry } from '@/app/lib/api';
+
 
 // 마켓 API 응답 형식에 맞는 타입 정의
 interface MarketItem {
@@ -18,12 +18,7 @@ interface MarketItem {
   CurrentMinPrice: number;
 }
 
-interface MarketResponse {
-  PageNo: number;
-  PageSize: number;
-  TotalCount: number;
-  Items: MarketItem[];
-}
+
 
 type CategoryKey = 'all' | 'enhancement' | 'battle' | 'cooking' | 'estate';
 
@@ -50,12 +45,11 @@ export default function ToolsPage() {
   const [category, setCategory] = useState<CategoryKey>('all');
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<MarketItem[]>([]);
-  const [options, setOptions] = useState<any | null>(null);
-  const [source, setSource] = useState<'market' | 'auction'>('market');
+  const [options, setOptions] = useState<unknown | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  const code = useMemo(() => (category === 'all' ? undefined : CATEGORY_CODE[category]), [category]);
+
 
   const onSearch = async () => {
     setLoading(true);
@@ -96,7 +90,7 @@ export default function ToolsPage() {
       });
       
       const text = await res.text();
-      let data: any = null;
+      let data: unknown = null;
       try {
         data = text ? JSON.parse(text) : null;
       } catch {
@@ -104,11 +98,11 @@ export default function ToolsPage() {
       }
       
       // 페이지 정보 업데이트
-      if (data && typeof data === 'object') {
-        setTotalCount(data.TotalCount || 0);
+      if (data && typeof data === 'object' && 'TotalCount' in data) {
+        setTotalCount((data as { TotalCount: number }).TotalCount || 0);
       }
       
-      const raw = (data && data.Items ? data.Items : []) as MarketItem[];
+      const raw = (data && typeof data === 'object' && 'Items' in data ? (data as { Items: MarketItem[] }).Items : []) as MarketItem[];
        
        // 제작 불가/불필요 아이템 블록리스트만 필터링
        const blockList = ['에스더의 기운'];
@@ -142,7 +136,7 @@ export default function ToolsPage() {
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, source, keyword]);
+  }, [category, keyword]);
 
   // 첫 진입 시 전체 노출 (한 번만 실행)
   useEffect(() => {
@@ -236,8 +230,7 @@ export default function ToolsPage() {
                         const margin = current - cost;
                         const roi = cost > 0 ? Math.round((margin / cost) * 100) : 0;
                         const energyRoi = Math.round(roi * 0.6);
-                        // 상세 통계 비동기 로딩을 위해 data-* attribute에 id 저장 (간단 구현)
-                        const weeklyAvg = 0;
+                        
 
                         return (
                           <tr key={`${it.Id}-${idx}`} className="border-t border-zinc-800" data-item-id={it.Id}>
@@ -297,47 +290,6 @@ export default function ToolsPage() {
   );
 }
 
-// 주간 평균 데이터 캐시
-const weeklyAvgCache = new Map<number, number>();
 
-function WeeklyAvgCell({ itemId }: { itemId: number }) {
-  const [value, setValue] = useState<number | null>(null);
-
-  useEffect(() => {
-    const run = async () => {
-      // 캐시 확인
-      if (weeklyAvgCache.has(itemId)) {
-        setValue(weeklyAvgCache.get(itemId)!);
-        return;
-      }
-
-      try {
-        const res = await fetch(`/tools/api?type=detail&itemId=${itemId}`);
-        const data = await res.json();
-        
-        // data는 배열 형태. 최근 7일 평균 거래량(TradeCount 평균) 계산
-        if (Array.isArray(data) && data[0]?.Stats) {
-          const stats = data[0].Stats as { Date: string; AvgPrice: number; TradeCount: number }[];
-          const last7 = stats.slice(-7);
-          const avg = last7.length ? Math.round(last7.reduce((s, x) => s + (x.TradeCount || 0), 0) / last7.length) : 0;
-          
-          // 캐시에 저장
-          weeklyAvgCache.set(itemId, avg);
-          setValue(avg);
-        } else {
-          weeklyAvgCache.set(itemId, 0);
-          setValue(0);
-        }
-      } catch (error) {
-        console.error(`아이템 ${itemId} 상세 정보 조회 실패:`, error);
-        weeklyAvgCache.set(itemId, 0);
-        setValue(0);
-      }
-    };
-    run();
-  }, [itemId]);
-
-  return <span>{value === null ? '-' : value.toLocaleString()}</span>;
-}
 
 

@@ -25,14 +25,14 @@ const dbConfig = {
 const pool = mysql.createPool(dbConfig);
 
 // 데이터 검증 함수 - undefined 값을 null로 변환
-function sanitizeData(data: any): any {
+function sanitizeData(data: unknown): unknown {
   if (data === undefined) return null;
   if (data === null) return null;
   if (typeof data === 'object' && data !== null) {
     if (Array.isArray(data)) {
       return data.map(item => sanitizeData(item));
     } else {
-      const sanitized: any = {};
+      const sanitized: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(data)) {
         sanitized[key] = sanitizeData(value);
       }
@@ -56,7 +56,7 @@ export async function testConnection() {
 }
 
 // 쿼리 실행 함수
-export async function executeQuery<T = any>(query: string, params?: any[]): Promise<T[]> {
+export async function executeQuery<T = unknown>(query: string, params?: unknown[]): Promise<T[]> {
   try {
     // undefined 값을 null로 변환
     const safeParams = params?.map(param => param === undefined ? null : param);
@@ -69,7 +69,7 @@ export async function executeQuery<T = any>(query: string, params?: any[]): Prom
 }
 
 // 단일 행 조회
-export async function executeQuerySingle<T = any>(query: string, params?: any[]): Promise<T | null> {
+export async function executeQuerySingle<T = unknown>(query: string, params?: unknown[]): Promise<T | null> {
   try {
     // undefined 값을 null로 변환
     const safeParams = params?.map(param => param === undefined ? null : param);
@@ -83,7 +83,7 @@ export async function executeQuerySingle<T = any>(query: string, params?: any[])
 }
 
 // 삽입 함수
-export async function insertData(table: string, data: Record<string, any>): Promise<number> {
+export async function insertData(table: string, data: Record<string, unknown>): Promise<number> {
   try {
     // 데이터 검증
     const sanitizedData = sanitizeData(data);
@@ -94,7 +94,7 @@ export async function insertData(table: string, data: Record<string, any>): Prom
     const query = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`;
     const [result] = await pool.execute(query, values);
     
-    return (result as any).insertId;
+    return (result as { insertId: number }).insertId;
   } catch (error) {
     console.error('데이터 삽입 오류:', error);
     throw error;
@@ -102,7 +102,7 @@ export async function insertData(table: string, data: Record<string, any>): Prom
 }
 
 // 업데이트 함수
-export async function updateData(table: string, data: Record<string, any>, where: Record<string, any>): Promise<number> {
+export async function updateData(table: string, data: Record<string, unknown>, where: Record<string, unknown>): Promise<number> {
   try {
     const setColumns = Object.keys(data).map(key => `${key} = ?`).join(', ');
     const whereColumns = Object.keys(where).map(key => `${key} = ?`).join(' AND ');

@@ -7,14 +7,12 @@ import GameContentCalendar from '@/components/GameContentCalendar';
 import {
   getLostarkNotices,
   getLostarkEvents,
-  getLostarkAlarms,
   getLostarkGameCalendar,
 } from '@/app/lib/api';
 
 import type {
   LostarkNotice,
   LostarkEvent,
-  LostarkAlarmItem,
   LostarkGameContent,
 } from '@/types/lostark';
 

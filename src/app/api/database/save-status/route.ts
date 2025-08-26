@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/app/lib/database';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // 각 테이블의 데이터 개수 조회
     const noticesCount = await executeQuery('SELECT COUNT(*) as count FROM notices');

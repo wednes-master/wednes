@@ -198,7 +198,7 @@ function countRemainingFieldBossSpawns(now: Date) {
 // ======================================================
 // 카오스게이트 기본 로직 (사용되지 않음)
 // ======================================================
-function defaultChaosGateGetter(nowDate: Date) {
+function defaultChaosGateGetter() {
   // 외부에서 nextChaosGateTimeGetter를 제공하므로 이 함수는 사용되지 않음
   return null;
 }
@@ -224,7 +224,7 @@ export default function GameTimers(props: GameTimersProps) {
   }, []);
 
   // 마운트 전에는 고정된 기준 시각을 사용해 SSR/CSR 불일치 방지
-  const n = useMemo(() => (mounted ? now(forceSeoulTime) : new Date(0)), [mounted, forceSeoulTime, tick]);
+  const n = useMemo(() => (mounted ? now(forceSeoulTime) : new Date(0)), [mounted, forceSeoulTime]);
 
   // 모험섬
   const adventure = useMemo(() => {

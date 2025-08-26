@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/app/lib/database';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // 전체 마켓 아이템 개수 조회
     const totalCount = await executeQuery('SELECT COUNT(*) as count FROM market_items');

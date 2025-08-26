@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/app/lib/database';
 
 // 스케줄러 상태 확인
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // 최근 배치 수집 시간 확인
     const lastBatch = await executeQuery(
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 }
 
 // 스케줄러 실행 (외부에서 호출)
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // 최근 배치 수집 시간 확인
     const lastBatch = await executeQuery(

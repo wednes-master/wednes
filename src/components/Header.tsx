@@ -110,7 +110,6 @@ export default function Header() {
         <ul className="flex justify-start space-x-8 font-semibold text-base items-center text-explan-color">
           {navItems.map(({ href, label }) => {
             const isActive = pathname === href || (pathname === '/' && href === '/home');
-            const isTools = href === '/tools';
             return (
               <li key={href}>
                 <Link
@@ -156,7 +155,6 @@ export default function Header() {
           <ul className="flex flex-col flex-grow text-xl font-medium text-text-primary">
             {navItems.map(({ href, label }, index, arr) => {
               const isActive = pathname === href || (pathname === '/' && href === '/home');
-              const isTools = href === '/tools';
               return (
                 <li
                   key={href}
@@ -164,14 +162,8 @@ export default function Header() {
                 >
                   <Link
                     href={href}
-                    onClick={(e) => {
-                      if (isTools) {
-                        e.preventDefault();
-                        setIsMenuOpen(false);
-                        toast.show('준비중입니다');
-                      } else {
-                        setIsMenuOpen(false);
-                      }
+                    onClick={() => {
+                      setIsMenuOpen(false);
                     }}
                     className={[
                       'block py-4 transition-colors duration-200',

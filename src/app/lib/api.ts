@@ -263,7 +263,7 @@ export async function searchAuction(params: AuctionSearchRequest): Promise<Aucti
 }
 
 // 마켓 아이템 데이터 저장 함수
-export async function saveMarketItemsToDB(items: any[], categoryCode?: number) {
+export async function saveMarketItemsToDB(items: Record<string, unknown>[], categoryCode?: number) {
   try {
     for (const item of items) {
       // 필수 필드 검증
@@ -293,7 +293,7 @@ export async function saveMarketItemsToDB(items: any[], categoryCode?: number) {
 }
 
 // 마켓 아이템 상세 데이터 저장 함수
-export async function saveMarketItemDetailToDB(itemId: number, detailData: any) {
+export async function saveMarketItemDetailToDB(itemId: number, detailData: Record<string, unknown>) {
   try {
     // 필수 필드 검증
     if (!detailData || !detailData.Name) {
@@ -320,7 +320,7 @@ export async function saveMarketItemDetailToDB(itemId: number, detailData: any) 
 }
 
 // 거래소 아이템 데이터 저장 함수
-export async function saveAuctionItemsToDB(items: any[]) {
+export async function saveAuctionItemsToDB(items: Record<string, unknown>[]) {
   try {
     for (const item of items) {
       // 필수 필드 검증

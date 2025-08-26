@@ -5,7 +5,7 @@ import {
   getLostarkAlarms, 
   getLostarkGameCalendar
 } from '@/app/lib/api';
-import { executeQuery, updateData } from '@/app/lib/database';
+import { executeQuery } from '@/app/lib/database';
 
 // 마켓 카테고리별 배치 수집
 async function collectMarketData() {
@@ -99,7 +99,7 @@ async function collectMarketData() {
 }
 
 // 마켓 아이템 처리 (신규 아이템은 INSERT, 기존 아이템은 시세만 UPDATE)
-async function processMarketItem(item: any, categoryCode: number) {
+async function processMarketItem(item: Record<string, unknown>, categoryCode: number) {
   try {
     // 기존 데이터 확인
     const existing = await executeQuery(
@@ -145,7 +145,7 @@ async function processMarketItem(item: any, categoryCode: number) {
 }
 
 // 배치 수집 실행
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('🚀 배치 데이터 수집 시작...');
     const startTime = Date.now();

@@ -57,11 +57,6 @@ export default function Header() {
     toast.show('준비중입니다');
   };
 
-  const handleToolsClick = (e?: React.MouseEvent<HTMLAnchorElement>) => {
-    if (e) e.preventDefault(); // 링크 이동 막기
-    toast.show('준비중입니다'); // 토스트 노출
-  };
-
   return (
     <header className="top-0 z-50 bg-surface-dark shadow-md background-layout-color">
       <div className="max-w-[1216px] mx-auto py-3 px-4 sm:px-6 flex justify-between items-center">
@@ -120,7 +115,6 @@ export default function Header() {
               <li key={href}>
                 <Link
                   href={href}
-                  onClick={isTools ? handleToolsClick : undefined} // '도구'만 토스트로 처리
                   className={[
                     'transition-colors duration-200',
                     isActive ? 'text-sub' : '',

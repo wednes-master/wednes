@@ -42,6 +42,66 @@ const nextAdventureTimeGetter = () => {
   return nextDay;
 };
 
+// 카오스게이트 다음 등장 시각 계산기
+const nextChaosGateTimeGetter = () => {
+  // 카오스게이트 출현 요일: 월(1), 목(4), 토(6), 일(0)
+  const CHAOS_GATE_DAYS = new Set<number>([0, 1, 4, 6]);
+  
+  const now = new Date();
+  const currentDay = now.getDay();
+  const currentHour = now.getHours();
+  
+  // 현재 시간이 카오스게이트 활성 시간대인지 확인
+  const isChaosGateActive = () => {
+    // 오늘이 출현일이고 11시 이후인 경우
+    if (CHAOS_GATE_DAYS.has(currentDay) && currentHour >= 11) {
+      return true;
+    }
+    
+    // 전날이 출현일이었고 현재 5시 이전인 경우
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayDay = yesterday.getDay();
+    if (CHAOS_GATE_DAYS.has(yesterdayDay) && currentHour < 5) {
+      return true;
+    }
+    
+    return false;
+  };
+  
+  // 현재 활성 시간대라면 다음 정시 반환
+  if (isChaosGateActive()) {
+    const nextHour = new Date(now);
+    nextHour.setMinutes(0, 0, 0);
+    if (nextHour.getTime() <= now.getTime()) {
+      nextHour.setHours(nextHour.getHours() + 1);
+    }
+    return nextHour;
+  }
+  
+  // 활성 시간대가 아니면 미출현
+  // 주석을 해제하면 다음 출현 시간을 표시할 수 있습니다
+  /*
+  // 다음 출현일 찾기
+  let daysToAdd = 1;
+  while (daysToAdd <= 7) {
+    const nextDate = new Date(now);
+    nextDate.setDate(now.getDate() + daysToAdd);
+    const nextDay = nextDate.getDay();
+    
+    if (CHAOS_GATE_DAYS.has(nextDay)) {
+      // 다음 출현일 오전 11시
+      nextDate.setHours(11, 0, 0, 0);
+      return nextDate;
+    }
+    
+    daysToAdd++;
+  }
+  */
+  
+  return null;
+};
+
 export default function GameContentCalendar({ calendar }: Props) {
   const [selectedDay] = useState(new Date().getDay());
 
@@ -84,7 +144,10 @@ export default function GameContentCalendar({ calendar }: Props) {
       {/* ★★★ 최상단 시간 표시 영역 (모험섬 + 카오스게이트) ★★★ */}
       <div className="text-center mb-4">
         <div className="flex justify-center items-center gap-8">
-        <GameTimers nextAdventureTimeGetter={nextAdventureTimeGetter} />
+        <GameTimers 
+          nextAdventureTimeGetter={nextAdventureTimeGetter}
+          nextChaosGateTimeGetter={nextChaosGateTimeGetter}
+        />
         </div>
       </div>
       {/* ★★★ 최상단 시간 표시 영역 끝 ★★★ */}

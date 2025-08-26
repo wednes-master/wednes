@@ -196,12 +196,11 @@ function countRemainingFieldBossSpawns(now: Date) {
 }
 
 // ======================================================
-// 카오스게이트 예시(선택)
-// - 필요 없으면 nextChaosGateTimeGetter를 넘기지 않거나 UI 블록 삭제
+// 카오스게이트 기본 로직 (사용되지 않음)
 // ======================================================
 function defaultChaosGateGetter(nowDate: Date) {
-  // 예시: 매일 정시 등장이라고 가정 (원 프로젝트 규칙에 맞게 바꾸세요)
-  return getNextTopOfHour(nowDate);
+  // 외부에서 nextChaosGateTimeGetter를 제공하므로 이 함수는 사용되지 않음
+  return null;
 }
 
 // ======================================================
@@ -241,7 +240,7 @@ export default function GameTimers(props: GameTimersProps) {
     return { label: formatHHMMSSFromMs(diff), color: 'text-yellow-400' };
   }, [mounted, n, nextAdventureTimeGetter]);
 
-  // 카오스게이트(선택)
+  // 카오스게이트
   const chaos = useMemo(() => {
     if (!mounted) return { label: '대기중', color: 'text-gray-500' };
     const getter = nextChaosGateTimeGetter

@@ -6,10 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "scheduler": "node scripts/auto-scheduler.js",
+    "batch-collect": "node scripts/batch-collect.js"
   },
   "dependencies": {
+    "@types/nprogress": "^0.2.3",
+    "mysql2": "^3.14.3",
     "next": "15.5.0",
+    "nprogress": "^0.2.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },

@@ -37,7 +37,7 @@ async function collectMarketData() {
           CharacterClass: '',
           ItemTier: null,
           ItemGrade: '',
-          ItemName: category.filter || '', // 50000 카테고리는 '융화' 필터 적용
+          ItemName: category.filter || '', // 50000 카테고리만 '융화' 필터 적용, 나머지는 빈 문자열
           PageNo: pageNo,
           SortCondition: 'ASC',
         };
@@ -107,25 +107,34 @@ async function collectMarketData() {
 // 마켓 아이템 처리 (신규 아이템은 INSERT, 기존 아이템은 시세만 UPDATE)
 async function processMarketItem(item: Record<string, unknown>, categoryCode: number) {
   try {
-    // 기존 데이터 확인
+    // 디버깅: 아이템 정보 로깅
+    console.log(`🔍 아이템 처리 중: ${item.Name} (ID: ${item.Id})`);
+    console.log(`💰 가격 정보: CurrentMinPrice=${item.CurrentMinPrice}, RecentPrice=${item.RecentPrice}, YDayAvgPrice=${item.YDayAvgPrice}`);
+    
+    // 기존 데이터 확인 (item_id와 name으로 정확히 매칭)
     const existing = await executeQuery(
-      'SELECT id, name FROM market_items WHERE item_id = ?',
-      [item.Id]
+      'SELECT id, name, current_min_price FROM market_items WHERE item_id = ? AND name = ?',
+      [item.Id, item.Name]
     );
 
     if (existing.length > 0) {
       // 기존 아이템이 있으면 시세만 업데이트
+      const oldPrice = (existing[0] as { current_min_price: number }).current_min_price;
+      console.log(`📊 기존 가격: ${oldPrice} → 새 가격: ${item.CurrentMinPrice}`);
+      
       await executeQuery(
         `UPDATE market_items 
          SET current_min_price = ?, recent_price = ?, avg_price = ?, updated_at = NOW()
-         WHERE item_id = ?`,
+         WHERE item_id = ? AND name = ?`,
         [
           item.CurrentMinPrice,
           item.RecentPrice,
           item.YDayAvgPrice,
-          item.Id
+          item.Id,
+          item.Name
         ]
       );
+      console.log(`✅ 가격 업데이트 완료: ${item.Name}`);
     } else {
       // 새 아이템이면 전체 데이터 삽입
       await executeQuery(

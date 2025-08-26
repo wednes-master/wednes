@@ -16,6 +16,9 @@ export async function GET(req: NextRequest) {
   const keyword = searchParams.get('keyword');
   const categoryCode = searchParams.get('categoryCode');
   
+  let query = '';
+  let params: (string | number)[] = [];
+  
   try {
     // 캐시 키 생성
     const cacheKey = JSON.stringify({ keyword, categoryCode });
@@ -29,19 +32,55 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(cached.data);
     }
     
-    // 데이터베이스에서 조회
-    let query = `
+    // 데이터베이스에서 조회 (재료 정보 포함)
+    query = `
       SELECT 
-        item_id as Id,
-        name as Name,
-        grade as Grade,
-        icon as Icon,
-        current_min_price as CurrentMinPrice,
-        recent_price as RecentPrice,
-        avg_price as YDayAvgPrice,
-        created_at,
-        updated_at
-      FROM market_items 
+        m.item_id as Id,
+        m.name as Name,
+        m.grade as Grade,
+        m.icon as Icon,
+        m.current_min_price as CurrentMinPrice,
+        m.recent_price as RecentPrice,
+        m.avg_price as YDayAvgPrice,
+        m.item_type,
+        m.item_unit,
+        m.item_energy,
+        m.item_production_time,
+        m.item_production_price,
+        m.item_charge,
+        m.item_sub1, m.item_sub1_num, m.item_sub1_unit,
+        m.item_sub2, m.item_sub2_num, m.item_sub2_unit,
+        m.item_sub3, m.item_sub3_num, m.item_sub3_unit,
+        m.item_sub4, m.item_sub4_num, m.item_sub4_unit,
+        m.item_sub5, m.item_sub5_num, m.item_sub5_unit,
+        m.item_sub6, m.item_sub6_num, m.item_sub6_unit,
+        -- 재료1 정보
+        COALESCE(sub1.icon, '') as item_sub1_icon,
+        COALESCE(sub1.current_min_price, 0) as item_sub1_price,
+        -- 재료2 정보
+        COALESCE(sub2.icon, '') as item_sub2_icon,
+        COALESCE(sub2.current_min_price, 0) as item_sub2_price,
+        -- 재료3 정보
+        COALESCE(sub3.icon, '') as item_sub3_icon,
+        COALESCE(sub3.current_min_price, 0) as item_sub3_price,
+        -- 재료4 정보
+        COALESCE(sub4.icon, '') as item_sub4_icon,
+        COALESCE(sub4.current_min_price, 0) as item_sub4_price,
+        -- 재료5 정보
+        COALESCE(sub5.icon, '') as item_sub5_icon,
+        COALESCE(sub5.current_min_price, 0) as item_sub5_price,
+        -- 재료6 정보
+        COALESCE(sub6.icon, '') as item_sub6_icon,
+        COALESCE(sub6.current_min_price, 0) as item_sub6_price,
+        m.created_at,
+        m.updated_at
+      FROM market_items m
+      LEFT JOIN market_items sub1 ON m.item_sub1 = sub1.name AND sub1.name IS NOT NULL
+      LEFT JOIN market_items sub2 ON m.item_sub2 = sub2.name AND sub2.name IS NOT NULL
+      LEFT JOIN market_items sub3 ON m.item_sub3 = sub3.name AND sub3.name IS NOT NULL
+      LEFT JOIN market_items sub4 ON m.item_sub4 = sub4.name AND sub4.name IS NOT NULL
+      LEFT JOIN market_items sub5 ON m.item_sub5 = sub5.name AND sub5.name IS NOT NULL
+      LEFT JOIN market_items sub6 ON m.item_sub6 = sub6.name AND sub6.name IS NOT NULL
       WHERE 1=1
     `;
     
@@ -49,7 +88,7 @@ export async function GET(req: NextRequest) {
     
     // 카테고리 필터
     if (categoryCode) {
-      query += ' AND category_code = ?';
+      query += ' AND m.category_code = ?';
       params.push(parseInt(categoryCode));
     }
     
@@ -57,12 +96,12 @@ export async function GET(req: NextRequest) {
     if (keyword && keyword.trim()) {
       const searchTerm = keyword.trim();
       console.log('🔍 검색어 (GET):', searchTerm);
-      query += ` AND name LIKE ?`;
+      query += ` AND m.name LIKE ?`;
       params.push(`%${searchTerm}%`);
     }
     
     // 정렬
-    query += ' ORDER BY name ASC';
+    query += ' ORDER BY m.grade ASC, m.name ASC';
     
     // 결과 제한
     query += ' LIMIT 500';
@@ -89,9 +128,18 @@ export async function GET(req: NextRequest) {
     
   } catch (error) {
     console.error('❌ 데이터베이스 조회 오류 (GET):', error);
+    console.error('❌ 오류 상세 정보:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      query: query,
+      params: params
+    });
     const responseTime = Date.now() - startTime;
     await saveApiLogToDB('/tools/api', 'GET', 500, responseTime, error instanceof Error ? error.message : 'Unknown error');
-    return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Database query failed', 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 });
   }
 }
 

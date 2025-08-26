@@ -45,7 +45,7 @@ export default function ToolsPage() {
   const [category, setCategory] = useState<CategoryKey>('all');
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<MarketItem[]>([]);
-  const [options, setOptions] = useState<unknown | null>(null);
+
   const [totalCount, setTotalCount] = useState(0);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -157,14 +157,7 @@ export default function ToolsPage() {
     }
   }, [items]);
 
-  useEffect(() => {
-    const fetchOptions = async () => {
-      const res = await fetch('/tools/api?type=options');
-      const data = await res.json();
-      setOptions(data);
-    };
-    fetchOptions();
-  }, []);
+
 
   return (
     <section className="max-w-[1216px] mx-auto px-3 sm:px-4 mt-4">

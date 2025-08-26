@@ -115,7 +115,7 @@ export async function updateData(table: string, data: Record<string, unknown>, w
     ];
     
     const [result] = await pool.execute(query, values);
-    return (result as any).affectedRows;
+    return (result as { affectedRows: number }).affectedRows;
   } catch (error) {
     console.error('데이터 업데이트 오류:', error);
     throw error;
@@ -123,7 +123,7 @@ export async function updateData(table: string, data: Record<string, unknown>, w
 }
 
 // 삭제 함수
-export async function deleteData(table: string, where: Record<string, any>): Promise<number> {
+export async function deleteData(table: string, where: Record<string, unknown>): Promise<number> {
   try {
     const whereColumns = Object.keys(where).map(key => `${key} = ?`).join(' AND ');
     const query = `DELETE FROM ${table} WHERE ${whereColumns}`;
@@ -131,7 +131,7 @@ export async function deleteData(table: string, where: Record<string, any>): Pro
     const values = Object.values(where).map(value => value === undefined ? null : value);
     
     const [result] = await pool.execute(query, values);
-    return (result as any).affectedRows;
+    return (result as { affectedRows: number }).affectedRows;
   } catch (error) {
     console.error('데이터 삭제 오류:', error);
     throw error;

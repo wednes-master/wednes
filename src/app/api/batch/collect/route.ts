@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
         'SELECT created_at FROM api_logs WHERE endpoint = "/api/batch/collect" ORDER BY created_at DESC LIMIT 1'
       );
 
-      const lastBatchTime = lastBatch[0]?.created_at;
+      const lastBatchTime = (lastBatch[0] as { created_at: string } | undefined)?.created_at;
       const now = new Date();
       const timeDiff = lastBatchTime ? Math.round((now.getTime() - new Date(lastBatchTime).getTime()) / (1000 * 60)) : null;
 

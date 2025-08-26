@@ -2,11 +2,6 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // (기존 devIndicators 설정이 있다면 그대로 둡니다)
-  devIndicators: {
-    buildActivity: false,
-  },
-
   // images 설정을 추가합니다.
   images: {
     remotePatterns: [

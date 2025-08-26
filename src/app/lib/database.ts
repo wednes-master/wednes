@@ -11,9 +11,6 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: parseInt(process.env.DB_POOL_MAX || '20'), // 연결 수 증가
   queueLimit: 0,
-  acquireTimeout: 10000, // 10초로 단축
-  timeout: 10000, // 10초로 단축
-  reconnect: true,
   // 성능 최적화 옵션 추가
   multipleStatements: false,
   dateStrings: true,

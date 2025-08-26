@@ -245,7 +245,7 @@ export default function GameTimers(props: GameTimersProps) {
     if (!mounted) return { label: '대기중', color: 'text-gray-500' };
     const getter = nextChaosGateTimeGetter
       ? nextChaosGateTimeGetter
-      : () => defaultChaosGateGetter(n);
+      : defaultChaosGateGetter;
     const next = getter();
     if (!next) return { label: '미출현', color: 'text-gray-500' };
     const diff = next.getTime() - n.getTime();

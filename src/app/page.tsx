@@ -67,7 +67,7 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {/* 공지사항 */}
           <Card className="text-left">
-            <h3 className="text-xl font-semibold mb-4 text-brand-primary">
+            <h3 className="text-lg font-semibold mb-4 text-brand-primary">
               <Link
                 href="https://lostark.game.onstove.com/News/Notice/List"
                 target="_blank"
@@ -90,7 +90,7 @@ export default async function HomePage() {
 
           {/* 업데이트 */}
           <Card className="text-left">
-            <h3 className="text-xl font-semibold mb-4 text-brand-primary">
+            <h3 className="text-lg font-semibold mb-4 text-brand-primary">
               <Link
                 href="https://lostark.game.onstove.com/News/Update/List"
                 target="_blank"

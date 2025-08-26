@@ -42,8 +42,8 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const navItems = [
-    { href: '/', label: '홈' },
-    { href: '/tools', label: '도구' },
+    { href: '/', label: '홈', icon: 'home' },
+    { href: '/tools', label: '도구', icon: 'tools' },
   ];
 
   const toast = useToast();
@@ -76,14 +76,17 @@ export default function Header() {
             type="button"
             className="
               hidden md:block
-              px-[10px] py-[5px]
-              bg-sub text-white
-              rounded-[5px]
-              border border-transparent
+              px-4 py-2
+              bg-[#bb86fc]
+              text-white
+              rounded-lg
               font-semibold
-              transition
+              transition-all duration-300
               cursor-pointer
-              hover:bg-[var(--wednes-bg-sub)] hover:border-sub
+              hover:bg-[#a66ffc]
+              hover:shadow-lg
+              hover:-translate-y-0.5
+              active:translate-y-0
             "
             onClick={handleLoginClick}
           >
@@ -92,7 +95,7 @@ export default function Header() {
 
           <button
             type="button"
-            className="md:hidden text-text-primary hover:text-brand-primary focus:outline-none ml-4"
+            className="md:hidden text-text-primary hover:text-brand-primary focus:outline-none ml-4 p-2 rounded-lg hover:bg-zinc-800/50 transition-all duration-200"
             onClick={() => setIsMenuOpen(true)}
             aria-label="메뉴 열기"
           >
@@ -108,19 +111,50 @@ export default function Header() {
       {/* PC 네비게이션 */}
       <nav className="hidden md:block max-w-[1216px] mx-auto py-2 px-4 sm:px-6">
         <ul className="flex justify-start space-x-8 font-semibold text-base items-center text-explan-color">
-          {navItems.map(({ href, label }) => {
+          {navItems.map(({ href, label, icon }) => {
             const isActive = pathname === href || (pathname === '/' && href === '/home');
             return (
               <li key={href}>
                 <Link
                   href={href}
                   className={[
-                    'transition-colors duration-200',
+                    'transition-colors duration-200 flex items-center gap-2',
                     isActive ? 'text-sub' : '',
-                    'hover:text-sub underline-offset-4 decoration-2',
+                    'hover:text-sub',
                   ].join(' ')}
+                  title={label}
                 >
-                  {label}
+                  {icon === 'home' && (
+                    <svg 
+                      className="w-6 h-6" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" 
+                      />
+                    </svg>
+                  )}
+                  {icon === 'tools' && (
+                    <svg 
+                      className="w-6 h-6" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
+                      />
+                    </svg>
+                  )}
+                  <span className="sr-only">{label}</span>
                 </Link>
               </li>
             );
@@ -131,62 +165,101 @@ export default function Header() {
       {/* 모바일 메뉴 */}
       <div
         className={[
-          'md:hidden fixed inset-0 z-40 bg-surface-dark transform',
+          'md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transform',
           isMenuOpen ? 'translate-x-0' : 'translate-x-full',
-          'transition-transform duration-300 ease-in-out',
+          'transition-all duration-300 ease-in-out',
           isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none',
         ].join(' ')}
       >
-        <nav className="h-full w-full p-4 flex flex-col background-box-main-color">
-          <div className="flex justify-end mb-8">
-            <button
-              type="button"
-              className="text-text-primary hover:text-brand-primary focus:outline-none"
-              onClick={() => setIsMenuOpen(false)}
-              aria-label="메뉴 닫기"
-            >
-              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* 기존 리스트 영역 */}
-          <ul className="flex flex-col flex-grow text-xl font-medium text-text-primary">
-            {navItems.map(({ href, label }, index, arr) => {
-              const isActive = pathname === href || (pathname === '/' && href === '/home');
-              return (
-                <li
-                  key={href}
-                  className={index < arr.length - 1 ? 'border-b border-zinc-700' : ''}
-                >
-                  <Link
-                    href={href}
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                    }}
-                    className={[
-                      'block py-4 transition-colors duration-200',
-                      isActive ? 'text-sub-color' : '',
-                      'hover:text-sub-color hover:underline underline-offset-4 decoration-2',
-                    ].join(' ')}
-                  >
-                    {label}
-                  </Link>
-                </li>
-              );
-            })}
-
-            <li className="mt-auto pt-4">
+        <nav className="h-full w-80 max-w-[85vw] ml-auto bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 shadow-2xl">
+          <div className="h-full flex flex-col">
+            {/* 헤더 영역 */}
+            <div className="flex justify-between items-center p-6 border-b border-zinc-700/50">
+              <h2 className="text-xl font-bold text-white">메뉴</h2>
               <button
                 type="button"
-                className="w-full bg-brand-primary text-base-dark font-semibold rounded-md py-3 hover:bg-brand-secondary transition"
+                className="text-zinc-400 hover:text-white focus:outline-none p-2 rounded-lg hover:bg-zinc-800/50 transition-all duration-200"
+                onClick={() => setIsMenuOpen(false)}
+                aria-label="메뉴 닫기"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 네비게이션 영역 */}
+            <div className="flex-1 p-4">
+              <ul className="space-y-2">
+                {navItems.map(({ href, label, icon }) => {
+                  const isActive = pathname === href || (pathname === '/' && href === '/home');
+                  return (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                        }}
+                        className={[
+                          'block p-4 rounded-xl transition-all duration-200 flex items-center gap-4',
+                          isActive 
+                            ? 'bg-[#bb86fc]/20 border border-[#bb86fc]/30 text-[#bb86fc]' 
+                            : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white',
+                        ].join(' ')}
+                      >
+                        {icon === 'home' && (
+                          <div className={`p-2 rounded-lg ${isActive ? 'bg-[#bb86fc]/30' : 'bg-zinc-700/50'}`}>
+                            <svg 
+                              className="w-5 h-5" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={2} 
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" 
+                              />
+                            </svg>
+                          </div>
+                        )}
+                        {icon === 'tools' && (
+                          <div className={`p-2 rounded-lg ${isActive ? 'bg-[#bb86fc]/30' : 'bg-zinc-700/50'}`}>
+                            <svg 
+                              className="w-5 h-5" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={2} 
+                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
+                              />
+                            </svg>
+                          </div>
+                        )}
+                        <span className="font-medium">{label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
+            {/* 로그인 버튼 영역 */}
+            <div className="p-4 border-t border-zinc-700/50">
+              <button
+                type="button"
+                className="w-full bg-[#bb86fc] text-white font-semibold rounded-xl py-4 hover:bg-[#a66ffc] transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
                 onClick={handleMobileLoginClick}
               >
                 로그인 / 회원가입
               </button>
-            </li>
-          </ul>
+            </div>
+          </div>
         </nav>
       </div>
 

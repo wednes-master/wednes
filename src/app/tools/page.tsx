@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Card from '@/components/Card';
 
-
 // 마켓 API 응답 형식에 맞는 타입 정의
 interface MarketItem {
   Id: number;
@@ -18,7 +17,14 @@ interface MarketItem {
   CurrentMinPrice: number;
 }
 
-
+// 제작 정보 타입 정의
+interface CraftingInfo {
+  unit: number;        // 제작단위
+  energy: number;      // 활동력
+  time: number;        // 제작시간 (분)
+  cost: number;        // 제작비용
+  materials: string[]; // 재료들
+}
 
 type CategoryKey = 'all' | 'enhancement' | 'battle' | 'cooking' | 'estate';
 
@@ -45,11 +51,44 @@ export default function ToolsPage() {
   const [category, setCategory] = useState<CategoryKey>('all');
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<MarketItem[]>([]);
-
   const [totalCount, setTotalCount] = useState(0);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
+  const [craftingInfoMap, setCraftingInfoMap] = useState<Map<number, CraftingInfo>>(new Map());
 
-
+  // 아이템 클릭 핸들러
+  const handleItemClick = async (item: MarketItem) => {
+    const newExpandedItems = new Set(expandedItems);
+    
+    if (newExpandedItems.has(item.Id)) {
+      // 이미 펼쳐진 아이템이면 접기
+      newExpandedItems.delete(item.Id);
+    } else {
+      // 펼쳐지지 않은 아이템이면 펼치기
+      newExpandedItems.add(item.Id);
+      
+      // 제작 정보가 없으면 생성
+      if (!craftingInfoMap.has(item.Id)) {
+        const mockCraftingInfo: CraftingInfo = {
+          unit: 1,
+          energy: Math.floor(Math.random() * 50) + 10, // 10-60 활동력
+          time: Math.floor(Math.random() * 60) + 5,    // 5-65분
+          cost: Math.floor(Number(item.CurrentMinPrice) * 0.7), // 현재가의 70%
+          materials: [
+            '재료1',
+            '재료2', 
+            '재료3'
+          ]
+        };
+        
+        const newCraftingInfoMap = new Map(craftingInfoMap);
+        newCraftingInfoMap.set(item.Id, mockCraftingInfo);
+        setCraftingInfoMap(newCraftingInfoMap);
+      }
+    }
+    
+    setExpandedItems(newExpandedItems);
+  };
 
   const onSearch = async () => {
     setLoading(true);
@@ -157,8 +196,6 @@ export default function ToolsPage() {
     }
   }, [items]);
 
-
-
   return (
     <section className="max-w-[1216px] mx-auto px-3 sm:px-4 mt-4">
       <Card className="text-left">
@@ -185,18 +222,18 @@ export default function ToolsPage() {
             </select>
           </div>
 
-                      {/* 로딩 상태 */}
-            {loading && (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-3"></div>
-                <span className="text-text-secondary">데이터를 불러오는 중...</span>
-              </div>
-            )}
+          {/* 로딩 상태 */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-3"></div>
+              <span className="text-text-secondary">데이터를 불러오는 중...</span>
+            </div>
+          )}
 
-            {/* 결과 테이블 */}
-            {!loading && (
-              <div className="overflow-x-auto">
-                              <table className="min-w-full text-sm">
+          {/* 결과 테이블 */}
+          {!loading && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
                 <thead className="text-center text-text-secondary">
                   <tr>
                     <th className="w-10 p-2">★</th>
@@ -207,49 +244,61 @@ export default function ToolsPage() {
                     <th className="w-28 p-2">판매차익</th>
                     <th className="w-28 p-2">원가이익률</th>
                     <th className="w-28 p-2">활동력 이익률</th>
-                    <th className="w-32 p-2">주간평균판매량</th>
                   </tr>
                 </thead>
-                  <tbody>
-                    {items.length === 0 ? (
-                      <tr>
-                        <td colSpan={9} className="p-4 text-center text-text-secondary">검색 결과가 없습니다.</td>
-                      </tr>
-                    ) : (
-                      items.map((it, idx) => {
-                        // 가짜 계산치(향후 제작비, 이익률, 주간판매량 API 연동 필요)
-                        const current = it.CurrentMinPrice ?? it.RecentPrice ?? it.YDayAvgPrice ?? 0;
-                        const cost = Math.round(current * 0.7);
-                        const margin = current - cost;
-                        const roi = cost > 0 ? Math.round((margin / cost) * 100) : 0;
-                        const energyRoi = Math.round(roi * 0.6);
-                        
-
-                        return (
-                          <tr key={`${it.Id}-${idx}`} className="border-t border-zinc-800" data-item-id={it.Id}>
+                <tbody>
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-4 text-center text-text-secondary">검색 결과가 없습니다.</td>
+                    </tr>
+                  ) : (
+                    items.map((it, idx) => {
+                      // 가짜 계산치(향후 제작비, 이익률, 주간판매량 API 연동 필요)
+                      const current = it.CurrentMinPrice ?? it.RecentPrice ?? it.YDayAvgPrice ?? 0;
+                      const cost = Math.round(current * 0.7);
+                      const margin = current - cost;
+                      const roi = cost > 0 ? Math.round((margin / cost) * 100) : 0;
+                      const energyRoi = Math.round(roi * 0.6);
+                      
+                      const isExpanded = expandedItems.has(it.Id);
+                      const craftingInfo = craftingInfoMap.get(it.Id);
+                      
+                      return (
+                        <React.Fragment key={`${it.Id}-${idx}`}>
+                          <tr 
+                            className="border-t border-zinc-800 hover:bg-zinc-800/50 cursor-pointer transition-colors" 
+                            data-item-id={it.Id}
+                            onClick={() => handleItemClick(it)}
+                          >
                             <td className="p-2 align-middle">
-                              <button aria-label="즐겨찾기" className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700">☆</button>
+                              <button 
+                                aria-label="즐겨찾기" 
+                                className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                ☆
+                              </button>
                             </td>
-                                                    <td className="p-2 align-middle text-center">
-                          {it.Icon ? (
-                            <Image 
-                              src={it.Icon} 
-                              alt={it.Name} 
-                              width={40} 
-                              height={40} 
-                              className="rounded object-contain"
-                              priority={idx < 20} // 처음 20개는 우선 로딩
-                              loading={idx < 20 ? "eager" : "lazy"}
-                              unoptimized={true} // 외부 이미지 최적화 비활성화로 빠른 로딩
-                              placeholder="blur"
-                              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-zinc-700 rounded flex items-center justify-center">
-                              <span className="text-xs text-zinc-400">?</span>
-                            </div>
-                          )}
-                        </td>
+                            <td className="p-2 align-middle text-center">
+                              {it.Icon ? (
+                                <Image 
+                                  src={it.Icon} 
+                                  alt={it.Name} 
+                                  width={40} 
+                                  height={40} 
+                                  className="rounded object-contain"
+                                  priority={idx < 20} // 처음 20개는 우선 로딩
+                                  loading={idx < 20 ? "eager" : "lazy"}
+                                  unoptimized={true} // 외부 이미지 최적화 비활성화로 빠른 로딩
+                                  placeholder="blur"
+                                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                                />
+                              ) : (
+                                <div className="w-10 h-10 bg-zinc-700 rounded flex items-center justify-center">
+                                  <span className="text-xs text-zinc-400">?</span>
+                                </div>
+                              )}
+                            </td>
                             <td className="p-2 align-middle">
                               <div className={`truncate ${it.Grade !== undefined && GRADE_COLOR[it.Grade] ? GRADE_COLOR[it.Grade] : ''}`}>{it.Name}</div>
                             </td>
@@ -258,25 +307,82 @@ export default function ToolsPage() {
                             <td className="p-2 align-middle text-right">{margin.toLocaleString()}</td>
                             <td className="p-2 align-middle text-right">{roi}%</td>
                             <td className="p-2 align-middle text-right">{energyRoi}%</td>
-                            <td className="p-2 align-middle text-right">
-                              {/* 주간 평균은 현재 0으로 표시 (성능 최적화) */}
-                              <span>0</span>
-                            </td>
                           </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                          
+                          {/* 제작 정보 행 */}
+                          {isExpanded && craftingInfo && (
+                            <tr className="bg-zinc-900/50">
+                              <td colSpan={8} className="p-4">
+                                <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-4 transform transition-all duration-300 ease-out hover:scale-[1.02]">
+                                  <div className="flex items-center gap-3 mb-4">
+                                    {it.Icon && (
+                                      <Image 
+                                        src={it.Icon} 
+                                        alt={it.Name} 
+                                        width={32} 
+                                        height={32} 
+                                        className="rounded object-contain"
+                                        unoptimized={true}
+                                      />
+                                    )}
+                                    <div>
+                                      <h4 className={`text-sm font-semibold ${it.Grade && GRADE_COLOR[it.Grade] ? GRADE_COLOR[it.Grade] : ''}`}>
+                                        {it.Name} - 제작 정보
+                                      </h4>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div className="bg-zinc-700 rounded p-2 transition-all duration-200 ease-out hover:bg-zinc-600 hover:scale-105">
+                                      <div className="text-xs text-zinc-400 mb-1">제작단위</div>
+                                      <div className="text-sm font-semibold">{craftingInfo.unit}개</div>
+                                    </div>
+                                    <div className="bg-zinc-700 rounded p-2 transition-all duration-200 ease-out hover:bg-zinc-600 hover:scale-105">
+                                      <div className="text-xs text-zinc-400 mb-1">활동력</div>
+                                      <div className="text-sm font-semibold text-blue-400">{craftingInfo.energy}</div>
+                                    </div>
+                                    <div className="bg-zinc-700 rounded p-2 transition-all duration-200 ease-out hover:bg-zinc-600 hover:scale-105">
+                                      <div className="text-xs text-zinc-400 mb-1">제작시간</div>
+                                      <div className="text-sm font-semibold text-yellow-400">{craftingInfo.time}분</div>
+                                    </div>
+                                    <div className="bg-zinc-700 rounded p-2 transition-all duration-200 ease-out hover:bg-zinc-600 hover:scale-105">
+                                      <div className="text-xs text-zinc-400 mb-1">제작비용</div>
+                                      <div className="text-sm font-semibold text-green-400">{craftingInfo.cost.toLocaleString()}골드</div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="mt-3">
+                                    <div className="text-xs text-zinc-400 mb-2">필요 재료</div>
+                                    <div className="flex flex-wrap gap-2">
+                                      {craftingInfo.materials.map((material, index) => (
+                                        <span 
+                                          key={index}
+                                          className="px-2 py-1 bg-zinc-700 rounded-full text-xs border border-zinc-600 transition-all duration-200 ease-out hover:bg-zinc-600 hover:scale-110 hover:border-zinc-500"
+                                        >
+                                          {material}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-           {/* 총 개수 표시 */}
-           {totalCount > 0 && (
-             <div className="text-center text-sm text-text-secondary mt-2">
-               총 {totalCount}개 아이템
-             </div>
-           )}
+          {/* 총 개수 표시 */}
+          {totalCount > 0 && (
+            <div className="text-center text-sm text-text-secondary mt-2">
+              총 {totalCount}개 아이템
+            </div>
+          )}
         </div>
       </Card>
     </section>

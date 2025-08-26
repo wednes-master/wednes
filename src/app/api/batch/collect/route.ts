@@ -59,6 +59,12 @@ async function collectMarketData() {
           if (data.Items && Array.isArray(data.Items)) {
             console.log(`📦 ${category.name} 카테고리 ${pageNo}페이지에서 ${data.Items.length}개 아이템 발견`);
             
+            // 첫 번째 아이템의 모든 필드 로깅 (디버깅용)
+            if (data.Items.length > 0 && pageNo === 1) {
+              console.log('🔍 첫 번째 아이템 필드 확인:', Object.keys(data.Items[0]));
+              console.log('📊 첫 번째 아이템 데이터:', JSON.stringify(data.Items[0], null, 2));
+            }
+            
             // 각 아이템 처리
             for (const item of data.Items) {
               // 50000 카테고리는 '융화'가 포함된 아이템만 처리

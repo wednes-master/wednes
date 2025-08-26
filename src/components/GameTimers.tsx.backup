@@ -276,73 +276,44 @@ export default function GameTimers(props: GameTimersProps) {
 
   return (
     <div className="w-full">
-      <div className="group relative bg-gradient-to-br from-zinc-800/80 to-zinc-900/80 rounded-xl p-3 sm:p-6 border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-zinc-900/20 hover:-translate-y-1">
-        {/* 배경 그라데이션 효과 */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        <div className="relative z-10">
-          {/* 모바일: 세로 정렬, PC: 가로 정렬 */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 justify-center">
-            {/* 모험섬 */}
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center">
-              <div className="relative">
-                <Image
-                  src={adventureIconSrc}
-                  alt="모험섬"
-                  width={20}
-                  height={20}
-                  className="sm:w-6 sm:h-6 object-contain filter drop-shadow-sm"
-                  priority={false}
-                />
-              </div>
-              <div className="text-center min-w-0 flex-1 sm:flex-none">
-                <div className="text-xs sm:text-sm text-zinc-400 mb-1">모험섬</div>
-                <div className={`text-sm sm:text-base font-bold ${adventure.color} transition-colors duration-300 truncate`}>
-                  {adventure.label}
-                </div>
-              </div>
-            </div>
+      <div className="flex flex-wrap items-center gap-4 justify-center">
+        {/* 모험섬 */}
+        <div className="flex items-center gap-2">
+          <Image
+            src={adventureIconSrc}
+            alt="모험섬"
+            width={20}
+            height={20}
+            className="object-contain"
+            priority={false}
+          />
+          <span className={`text-sm font-bold ${adventure.color}`}>{adventure.label}</span>
+        </div>
 
-            {/* 필드보스 */}
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center">
-              <div className="relative">
-                <Image
-                  src={fieldBossIconSrc}
-                  alt="필드보스"
-                  width={20}
-                  height={20}
-                  className="sm:w-6 sm:h-6 object-contain filter drop-shadow-sm"
-                  priority={false}
-                />
-              </div>
-              <div className="text-center min-w-0 flex-1 sm:flex-none">
-                <div className="text-xs sm:text-sm text-zinc-400 mb-1">필드보스</div>
-                <div className={`text-sm sm:text-base font-bold ${fieldBoss.color} transition-colors duration-300 truncate`}>
-                  {fieldBoss.label}
-                </div>
-              </div>
-            </div>
+        {/* 필드보스 */}
+        <div className="flex items-center gap-2">
+          <Image
+            src={fieldBossIconSrc}
+            alt="필드보스"
+            width={20}
+            height={20}
+            className="object-contain"
+            priority={false}
+          />
+          <span className={`text-sm font-bold ${fieldBoss.color}`}>{fieldBoss.label}</span>
+        </div>
 
-            {/* 카오스게이트 */}
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center">
-              <div className="relative">
-                <Image
-                  src={chaosGateIconSrc}
-                  alt="카오스게이트"
-                  width={20}
-                  height={20}
-                  className="sm:w-6 sm:h-6 object-contain filter drop-shadow-sm"
-                  priority={false}
-                />
-              </div>
-              <div className="text-center min-w-0 flex-1 sm:flex-none">
-                <div className="text-xs sm:text-sm text-zinc-400 mb-1">카오스게이트</div>
-                <div className={`text-sm sm:text-base font-bold ${chaos.color} transition-colors duration-300 truncate`}>
-                  {chaos.label}
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* 카오스게이트(선택) */}
+        <div className="flex items-center gap-2">
+          <Image
+            src={chaosGateIconSrc}
+            alt="카오스게이트"
+            width={20}
+            height={20}
+            className="object-contain"
+            priority={false}
+          />
+          <span className={`text-sm font-bold ${chaos.color}`}>{chaos.label}</span>
         </div>
       </div>
 
@@ -353,4 +324,3 @@ export default function GameTimers(props: GameTimersProps) {
     </div>
   );
 }
-

@@ -1,8 +1,8 @@
 // src/components/cards/NoticesCard.tsx
 'use client';
 
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { LostarkNotice } from '@/types/lostark';
 
 type Props = {
@@ -11,64 +11,73 @@ type Props = {
 
 export default function NoticesCard({ notices }: Props) {
   if (!Array.isArray(notices) || notices.length === 0) {
-    return <p className="text-text-secondary">정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>;
+    return (
+      <div className="text-center py-8">
+        <div className="bg-zinc-800/50 rounded-lg p-6">
+          <div className="text-zinc-400 text-lg mb-2">📢</div>
+          <p className="text-text-secondary">표시할 공지사항이 없습니다.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <ul className="text-text-primary space-y-2 list-none">
-      {notices.map((item, index) => {
-        const title = item.Title ?? '제목 없음';
-        const link = typeof item.Link === 'string' ? item.Link : undefined;
-        const thumbnailUrl = item.Thumbnail || undefined;
-        // 공지 타입은 Date만 표기
-        const displayDate =
-        typeof item.Date === 'string'
-          ? new Date(item.Date).toLocaleDateString('ko-KR')
-          : '';
+    <div className="space-y-3 max-h-72 overflow-y-auto custom-scrollbar">
+      {notices.map((notice, idx) => {
+        const link = typeof notice.Link === 'string' ? notice.Link : undefined;
+        const thumbnailUrl = notice.Thumbnail;
 
-      return (
-        <li key={index} className="flex items-start">
-          {thumbnailUrl && (
-            <div className="flex-shrink-0 mr-3 hidden xs:block">
-              <Image
-                src={thumbnailUrl}
-                alt={title}
-                width={96}
-                height={60}
-                className="rounded-md object-cover"
-              />
+        const content = (
+          <div className="group relative bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl p-4 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1">
+            {/* 배경 그라데이션 효과 */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            
+            <div className="relative z-10 flex gap-4">
+              {/* 썸네일 이미지 */}
+              {thumbnailUrl && (
+                <div className="flex-shrink-0">
+                  <div className="relative w-20 h-12 overflow-hidden rounded-lg border border-zinc-600/30 group-hover:border-zinc-500/50 transition-colors duration-300">
+                    <Image
+                      src={thumbnailUrl}
+                      alt="공지사항 썸네일"
+                      fill
+                      sizes="80px"
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      priority={idx < 3}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* 텍스트 내용 */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm sm:text-base font-medium text-text-main line-clamp-2 group-hover:text-blue-400 transition-colors duration-200 mb-2">
+                  {notice.Title}
+                </h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-text-explan">
+                    {new Date(notice.Date).toLocaleDateString('ko-KR')}
+                  </span>
+                  {/* 작은 원형 장식 요소 */}
+                  <div className="w-2 h-2 bg-blue-500/60 rounded-full group-hover:bg-blue-400 transition-colors duration-200" />
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+        );
 
-          <div className="flex-grow min-w-0 flex flex-col justify-center">
+        return (
+          <div key={idx} className="w-full">
             {link ? (
-              <Link
-                href={link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block truncate leading-5 hover:text-brand-primary hover:underline transition duration-200"
-                title={title}
-              >
-                {title}
+              <Link href={link} target="_blank" rel="noopener noreferrer">
+                {content}
               </Link>
             ) : (
-              <span className="block truncate leading-5 cursor-default" title={title}>
-                {title}
-              </span>
-            )}
-
-            {displayDate && (
-              <span
-                className="block text-xs text-text-secondary mt-1 truncate leading-4"
-                title={displayDate}
-              >
-                {displayDate}
-              </span>
+              content
             )}
           </div>
-        </li>
-      );
-    })}
-    </ul>
+        );
+      })}
+    </div>
   );
 }

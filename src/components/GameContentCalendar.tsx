@@ -154,53 +154,91 @@ export default function GameContentCalendar({ calendar }: Props) {
 
       {/* 선택된 요일의 콘텐츠 표시 영역 */}
       {dayContents.length === 0 ? (
-        <p className="text-text-secondary text-center py-4">해당 요일에 진행되는 모험섬 콘텐츠가 없습니다.</p>
+        <div className="text-center py-8">
+          <div className="bg-zinc-800/50 rounded-lg p-6">
+            <div className="text-zinc-400 text-lg mb-2">🏝️</div>
+            <p className="text-text-secondary">해당 요일에 진행되는 모험섬 콘텐츠가 없습니다.</p>
+          </div>
+        </div>
       ) : (
-        // 모험섬: 모바일 1열, sm 2열, lg 3열
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 rounded-lg background-box-sub-color">
+        // 모험섬: 모바일에서는 1열, PC에서는 3열로 표시
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
           {dayContents.map((content, idx) => {
             const allRewards = getAllRewardItems(content.RewardItems);
 
             return (
               <div
                 key={idx}
-                className="bg-surface-dark rounded-lg flex flex-col md:flex-row items-center md:items-start gap-3 md:gap-4 p-4"
+                className="group relative bg-gradient-to-br from-zinc-800/80 to-zinc-900/80 rounded-xl p-3 sm:p-4 lg:p-6 border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-zinc-900/20 hover:-translate-y-1"
               >
-                {/* 좌측: 이미지 */}
-                <Image
-                  src={content.ContentsIcon}
-                  alt={content.ContentsName}
-                  width={64}
-                  height={64}
-                  className="rounded-full object-cover flex-shrink-0 border-2 border-zinc-700 md:mx-0 mx-auto"
-                />
+                {/* 배경 그라데이션 효과 */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="relative z-10">
+                  {/* 상단: 섬 이름과 아이콘 */}
+                  <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4">
+                    <div className="relative">
+                      <Image
+                        src={content.ContentsIcon}
+                        alt={content.ContentsName}
+                        width={40}
+                        height={40}
+                        className="sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl object-cover border-2 border-zinc-600 group-hover:border-zinc-500 transition-colors duration-300 shadow-lg"
+                      />
+                      {/* 아이콘 위에 작은 장식 효과 */}
+                      <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-text-primary font-bold text-sm sm:text-base lg:text-lg group-hover:text-white transition-colors duration-300 truncate">
+                        {content.ContentsName}
+                      </h4>
+                      <div className="flex items-center gap-1 sm:gap-2 mt-1">
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full" />
+                        <span className="text-zinc-400 text-xs sm:text-sm">모험섬</span>
+                      </div>
+                    </div>
+                  </div>
 
-                {/* 우측: 섬 이름, 보상 그룹 */}
-                <div className="flex flex-col flex-grow w-full text-center md:text-left">
-                  {/* 우측 상단: 섬 이름 */}
-                  <h4 className="text-text-primary font-semibold text-sm mt-2 md:mt-0">
-                    {content.ContentsName}
-                  </h4>
-
-                  {/* 우측 하단: 모든 보상 아이템 */}
+                  {/* 하단: 보상 아이템들 */}
                   {allRewards.length > 0 && (
-                    <div className="mt-2 w-full">
-                      <ul className="list-none p-0 flex flex-wrap gap-2 justify-center md:justify-start">
-                        {allRewards.map((reward, rewardIdx) => (
-                          <li key={rewardIdx} className="flex items-center">
-                            <Image
-                              src={reward.Icon}
-                              alt={reward.Name}
-                              width={20}
-                              height={20}
-                              className="object-contain flex-shrink-0"
-                            />
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                          <span className="text-xs text-white font-bold">💰</span>
+                        </div>
+                        <span className="text-zinc-300 text-xs sm:text-sm font-medium">보상 아이템</span>
+                      </div>
+                      
+                      <div className="bg-zinc-900/50 rounded-lg p-2 sm:p-3 border border-zinc-700/30">
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                          {allRewards.map((reward, rewardIdx) => (
+                            <div
+                              key={rewardIdx}
+                              className="group/reward relative bg-zinc-800/80 rounded-md sm:rounded-lg p-1.5 sm:p-2 border border-zinc-600/30 hover:border-zinc-500/50 transition-all duration-200 hover:scale-105"
+                            >
+                              <Image
+                                src={reward.Icon}
+                                alt={reward.Name}
+                                width={18}
+                                height={18}
+                                className="sm:w-6 sm:h-6 lg:w-6 lg:h-6 object-contain"
+                              />
+                              {/* 툴팁 효과 */}
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover/reward:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20">
+                                {reward.Name}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-zinc-900" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
+
+                {/* 우상단 장식 요소 */}
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             );
           })}

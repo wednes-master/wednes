@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import NProgress from 'nprogress';
 
 // NProgress 설정
@@ -19,10 +19,9 @@ export default function NProgressProvider({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    // 경로나 검색 파라미터가 변경될 때 로딩 바 시작
+    // 경로가 변경될 때 로딩 바 시작
     NProgress.start();
     
     // 짧은 지연 후 로딩 바 완료 (실제 페이지 로딩 시뮬레이션)
@@ -34,7 +33,7 @@ export default function NProgressProvider({
       clearTimeout(timer);
       NProgress.done();
     };
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   return <>{children}</>;
 }

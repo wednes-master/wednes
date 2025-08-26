@@ -5,6 +5,7 @@ import Header from '@/components/Header'; // 새로 생성할 Header 컴포넌�
 import Footer from '@/components/Footer'; // 새로 생성할 Footer 컴포넌트 임포트
 import NProgressProvider from '@/components/NProgressProvider'; // NProgress 프로바이더
 
+
 // 배포 도메인으로 교체하세요 (예: https://wednes.dev)
 const baseUrl = 'http://hyeok.io';
 const ogImagePath = '/og/wednes-og.png'; // /public/og/wednes-symbol.png

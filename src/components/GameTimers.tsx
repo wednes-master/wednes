@@ -224,7 +224,7 @@ export default function GameTimers(props: GameTimersProps) {
   }, []);
 
   // 마운트 전에는 고정된 기준 시각을 사용해 SSR/CSR 불일치 방지
-  const n = useMemo(() => (mounted ? now(forceSeoulTime) : new Date(0)), [mounted, forceSeoulTime]);
+  const n = useMemo(() => (mounted ? now(forceSeoulTime) : new Date(0)), [mounted, forceSeoulTime, tick]);
 
   // 모험섬
   const adventure = useMemo(() => {
@@ -238,7 +238,7 @@ export default function GameTimers(props: GameTimersProps) {
       return { label: '진행중', color: 'text-green-500' };
     }
     return { label: formatHHMMSSFromMs(diff), color: 'text-yellow-400' };
-  }, [mounted, n, nextAdventureTimeGetter]);
+  }, [mounted, n, nextAdventureTimeGetter, tick]);
 
   // 카오스게이트
   const chaos = useMemo(() => {
@@ -251,7 +251,7 @@ export default function GameTimers(props: GameTimersProps) {
     const diff = next.getTime() - n.getTime();
     if (diff <= 0) return { label: '진행중', color: 'text-green-500' };
     return { label: formatHHMMSSFromMs(diff), color: 'text-yellow-400' };
-  }, [mounted, n, nextChaosGateTimeGetter]);
+  }, [mounted, n, nextChaosGateTimeGetter, tick]);
 
   // 필드보스
   const fieldBoss = useMemo(() => {
@@ -272,7 +272,7 @@ export default function GameTimers(props: GameTimersProps) {
     const diff = next.getTime() - n.getTime();
     const remain = countRemainingFieldBossSpawns(n);
     return { label: formatHHMMSSFromMs(diff), color: 'text-yellow-400', remain };
-  }, [mounted, n]);
+  }, [mounted, n, tick]);
 
   return (
     <div className="w-full">

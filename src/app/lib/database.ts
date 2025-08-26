@@ -83,7 +83,7 @@ export async function executeQuerySingle<T = unknown>(query: string, params?: un
 export async function insertData(table: string, data: Record<string, unknown>): Promise<number> {
   try {
     // 데이터 검증
-    const sanitizedData = sanitizeData(data);
+    const sanitizedData = sanitizeData(data) as Record<string, unknown>;
     const columns = Object.keys(sanitizedData);
     const values = Object.values(sanitizedData);
     const placeholders = columns.map(() => '?').join(', ');

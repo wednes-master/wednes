@@ -37,7 +37,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        totalCount: totalCount[0]?.count || 0,
+        totalCount: (totalCount[0] as { count: number } | undefined)?.count || 0,
         recentItems,
         categoryCounts
       }

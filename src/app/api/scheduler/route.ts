@@ -63,7 +63,7 @@ export async function POST() {
     // 배치 수집 실행
     console.log('🕐 스케줄러: 배치 수집 실행 시작...');
     
-    const batchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/api/batch/collect`, {
+    const batchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://hyeok.io'}/api/batch/collect`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

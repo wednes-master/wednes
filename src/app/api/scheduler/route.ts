@@ -7,94 +7,106 @@ import {
   getLostarkGameCalendar
 } from '@/app/lib/api';
 
-// 마켓 카테고리별 배치 수집 (배치 수집에서 복사)
+// 마켓 카테고리별 병렬 배치 수집 (최적화)
 async function collectMarketData() {
-  const categories = [
-    { code: 50000, name: 'enhancement', filter: '융화' }, // 강화재료 (융화 포함만)
-    { code: 60000, name: 'battle' },      // 배틀아이템
-    { code: 70000, name: 'cooking' },     // 요리
-    { code: 90000, name: 'estate' },      // 영지
-  ];
+  try {
+    console.log('🔄 마켓 데이터 병렬 수집 중...');
+    
+    // 로스트아크 API에서 직접 데이터 가져오기
+    const apiKey = process.env.LOSTARK_API_KEY;
+    if (!apiKey) {
+      throw new Error('LOSTARK_API_KEY가 설정되지 않았습니다.');
+    }
 
-  for (const category of categories) {
-    try {
-      console.log(`🔄 ${category.name} 카테고리 데이터 수집 중...`);
-      
-      // 로스트아크 API에서 직접 데이터 가져오기
-      const apiKey = process.env.LOSTARK_API_KEY;
-      if (!apiKey) {
-        throw new Error('LOSTARK_API_KEY가 설정되지 않았습니다.');
-      }
+    const categories = [
+      { code: 50000, name: 'enhancement', filter: '융화' }, // 강화재료 (융화 포함만)
+      { code: 60000, name: 'battle' },      // 배틀아이템
+      { code: 70000, name: 'cooking' },     // 요리
+      { code: 90000, name: 'estate' },      // 영지
+    ];
 
-      let totalProcessed = 0;
-      let pageNo = 1;
-      const maxPages = 10; // 최대 10페이지까지 수집
+    // 각 카테고리별로 병렬 처리 (전체 페이지)
+    const categoryPromises = categories.map(async (category) => {
+      try {
+        console.log(`🔄 ${category.name} 카테고리 데이터 수집 중...`);
+        
+        // 전체 페이지를 순차적으로 조회
+        let allItems: any[] = [];
+        let pageNo = 1;
+        const pageSize = 10; // API가 10개만 반환
+        
+        while (true) {
+          const payload = {
+            Sort: 'GRADE',
+            CategoryCode: category.code,
+            CharacterClass: '',
+            ItemTier: null,
+            ItemGrade: '',
+            ItemName: category.filter || '', // 50000 카테고리만 '융화' 필터 적용
+            PageNo: pageNo,
+            PageSize: pageSize,
+            SortCondition: 'ASC',
+          };
 
-      while (pageNo <= maxPages) {
-        const payload = {
-          Sort: 'GRADE',
-          CategoryCode: category.code,
-          CharacterClass: '',
-          ItemTier: null,
-          ItemGrade: '',
-          ItemName: category.filter || '', // 50000 카테고리만 '융화' 필터 적용, 나머지는 빈 문자열
-          PageNo: pageNo,
-          SortCondition: 'ASC',
-        };
+          const res = await fetch('https://developer-lostark.game.onstove.com/markets/items', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
 
-        console.log(`📄 ${category.name} 카테고리 ${pageNo}페이지 수집 중...`);
-
-        const res = await fetch('https://developer-lostark.game.onstove.com/markets/items', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.Items && Array.isArray(data.Items)) {
-            console.log(`📦 ${category.name} 카테고리 ${pageNo}페이지에서 ${data.Items.length}개 아이템 발견`);
-            
-            // 각 아이템 처리
-            for (const item of data.Items) {
-              // 50000 카테고리는 '융화'가 포함된 아이템만 처리
-              if (category.code === 50000 && !item.Name.includes('융화')) {
-                continue;
-              }
-              
-              await processMarketItem(item, category.code);
-              totalProcessed++;
-            }
-            
-            // 더 이상 아이템이 없으면 중단
-            if (data.Items.length === 0) {
-              console.log(`📭 ${category.name} 카테고리 ${pageNo}페이지에 아이템이 없어 수집 중단`);
-              break;
-            }
-          } else {
-            console.log(`📭 ${category.name} 카테고리 ${pageNo}페이지에 아이템이 없어 수집 중단`);
+          if (!res.ok) {
+            console.error(`❌ ${category.name} 카테고리 API 호출 실패:`, res.status);
             break;
           }
-        } else {
-          console.error(`❌ ${category.name} 카테고리 ${pageNo}페이지 API 호출 실패:`, res.status);
-          break;
+
+          const data = await res.json();
+          const items = data.Items || [];
+          
+          if (items.length === 0) {
+            break; // 더 이상 아이템이 없으면 종료
+          }
+          
+          allItems = allItems.concat(items);
+          console.log(`📦 ${category.name} 페이지 ${pageNo}: ${items.length}개 아이템`);
+          
+          // 마지막 페이지인지 확인 (10개 미만이면 마지막 페이지)
+          if (items.length < pageSize) {
+            break;
+          }
+          
+          pageNo++;
         }
         
-        pageNo++;
-        
-        // API 호출 간격 조절 (1초 대기)
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (allItems.length > 0) {
+          console.log(`📦 ${category.name} 카테고리에서 총 ${allItems.length}개 아이템 발견`);
+          
+          let processed = 0;
+          for (const item of allItems) {
+            await processMarketItem(item, category.code);
+            processed++;
+          }
+          
+          console.log(`✅ ${category.name} 카테고리 처리 완료 (총 ${processed}개 아이템)`);
+          return processed;
+        }
+      } catch (error) {
+        console.error(`❌ ${category.name} 카테고리 수집 오류:`, error);
       }
-      
-      console.log(`✅ ${category.name} 카테고리 처리 완료 (총 ${totalProcessed}개 아이템)`);
-      
-    } catch (error) {
-      console.error(`❌ ${category.name} 카테고리 수집 오류:`, error);
-    }
+      return 0;
+    });
+
+    // 모든 카테고리 병렬 처리 완료 대기
+    const results = await Promise.all(categoryPromises);
+    const totalProcessed = results.reduce((sum, count) => sum + count, 0);
+    
+    console.log(`✅ 전체 마켓 병렬 처리 완료 (총 ${totalProcessed}개 아이템)`);
+    
+  } catch (error) {
+    console.error('❌ 마켓 데이터 수집 오류:', error);
   }
 }
 
@@ -158,15 +170,16 @@ export async function GET() {
   try {
     // 최근 배치 수집 시간 확인
     const lastBatch = await executeQuery(
-      'SELECT created_at FROM api_logs WHERE endpoint = "/api/batch/collect" ORDER BY created_at DESC LIMIT 1'
+      'SELECT created_at FROM api_logs WHERE endpoint = "/api/batch/collect" ORDER BY created_at DESC LIMIT 1',
+      []
     );
 
     const lastBatchTime = (lastBatch[0] as { created_at: string } | undefined)?.created_at;
     const now = new Date();
     const timeDiff = lastBatchTime ? Math.round((now.getTime() - new Date(lastBatchTime).getTime()) / (1000 * 60)) : null;
 
-    // 1시간(60분) 경과 여부 확인
-    const shouldRun = timeDiff === null || timeDiff >= 60;
+    // 10분 경과 여부 확인
+    const shouldRun = timeDiff === null || timeDiff >= 10;
 
     return NextResponse.json({
       success: true,
@@ -192,25 +205,28 @@ export async function POST() {
   try {
     // 최근 배치 수집 시간 확인
     const lastBatch = await executeQuery(
-      'SELECT created_at FROM api_logs WHERE endpoint = "/api/batch/collect" ORDER BY created_at DESC LIMIT 1'
+      'SELECT created_at FROM api_logs WHERE endpoint = "/api/batch/collect" ORDER BY created_at DESC LIMIT 1',
+      []
     );
 
     const lastBatchTime = (lastBatch[0] as { created_at: string } | undefined)?.created_at;
     const now = new Date();
     const timeDiff = lastBatchTime ? Math.round((now.getTime() - new Date(lastBatchTime).getTime()) / (1000 * 60)) : null;
 
-    // 1시간 미만이면 실행하지 않음
-    if (timeDiff !== null && timeDiff < 60) {
+    // 10분 미만이면 실행하지 않음 (임시로 주석 처리)
+    /*
+    if (timeDiff !== null && timeDiff < 10) {
       return NextResponse.json({
         success: false,
         message: '아직 실행 시간이 되지 않았습니다',
         data: {
           lastBatchTime,
           timeDiffMinutes: timeDiff,
-          nextRunTime: lastBatchTime ? new Date(new Date(lastBatchTime).getTime() + 60 * 60 * 1000) : null
+          nextRunTime: lastBatchTime ? new Date(new Date(lastBatchTime).getTime() + 10 * 60 * 1000) : null
         }
       });
     }
+    */
 
     // 배치 수집 실행 (직접 함수 호출)
     console.log('🕐 스케줄러: 배치 수집 실행 시작...');

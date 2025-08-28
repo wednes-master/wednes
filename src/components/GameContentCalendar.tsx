@@ -127,12 +127,35 @@ export default function GameContentCalendar({ calendar }: Props) {
       item.StartTimes.some(() => true)
   );
 
-  // 선택된 요일에 해당하는 모험섬 콘텐츠만 필터링
-  const dayContents = adventureContents.filter((content) =>
-    content.StartTimes.some( 
-      (time) => new Date(time).getDay() === selectedDay
-    )
-  );
+  // 디버깅을 위한 로그 추가
+  console.log('🔍 현재 요일:', selectedDay);
+  console.log('🔍 모험섬 데이터:', adventureContents);
+  
+  // 오늘 날짜의 모험섬 콘텐츠만 필터링 (한국 시간 기준)
+  const currentDate = new Date();
+  // 한국 시간대로 설정 (UTC+9)
+  const koreaTime = new Date(currentDate.getTime() + (9 * 60 * 60 * 1000));
+  const todayStart = new Date(koreaTime);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(todayStart);
+  todayEnd.setHours(23, 59, 59, 999);
+  
+  const dayContents = adventureContents.filter((content) => {
+    const hasTodayTime = content.StartTimes.some((time) => {
+      const eventDate = new Date(time);
+      const isToday = eventDate >= todayStart && eventDate <= todayEnd;
+      console.log(`📅 ${content.ContentsName}: ${time} -> ${isToday ? '오늘' : '다른날'} (한국 오늘: ${todayStart.toISOString()} ~ ${todayEnd.toISOString()})`);
+      return isToday;
+    });
+    return hasTodayTime;
+  })
+  .filter((content, index, self) => 
+    // 중복 제거: 같은 이름의 모험섬은 첫 번째만 유지
+    index === self.findIndex(c => c.ContentsName === content.ContentsName)
+  )
+  .sort((a, b) => a.ContentsName.localeCompare(b.ContentsName)); // 이름 순으로 정렬
+  
+  console.log('✅ 필터링된 모험섬:', dayContents);
 
   const getAllRewardItems = (rewards: LostarkGameContent['RewardItems']): GameContentRewardItem[] => {
     if (!rewards) return [];
@@ -157,7 +180,8 @@ export default function GameContentCalendar({ calendar }: Props) {
         <div className="text-center py-8">
           <div className="bg-zinc-800/50 rounded-lg p-6">
             <div className="text-zinc-400 text-lg mb-2">🏝️</div>
-            <p className="text-text-secondary">해당 요일에 진행되는 모험섬 콘텐츠가 없습니다.</p>
+            <p className="text-text-secondary">오늘 진행되는 모험섬 콘텐츠가 없습니다.</p>
+            <p className="text-zinc-500 text-sm mt-2">내일의 모험섬을 확인해보세요.</p>
           </div>
         </div>
       ) : (

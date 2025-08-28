@@ -108,10 +108,17 @@ export async function getLostarkAlarms(limit = 5): Promise<LostarkAlarmItem[]> {
 export async function getLostarkGameCalendar(): Promise<LostarkGameContent[]> {
   const data = await fetchLostarkData<LostarkGameContent[]>('/gamecontents/calendar', 300);
   
-  // 데이터베이스에 저장
+  // 데이터베이스에 저장 (중복 제거)
   if (data) {
     try {
-      for (const content of data) {
+      // 중복 제거: 같은 이름의 콘텐츠는 하나만 유지
+      const uniqueData = data.filter((content, index, self) => 
+        index === self.findIndex(c => c.ContentsName === content.ContentsName)
+      );
+      
+      console.log(`🔍 중복 제거: ${data.length}개 → ${uniqueData.length}개`);
+      
+      for (const content of uniqueData) {
         await insertData('game_contents', {
           category_name: content.CategoryName,
           contents_name: content.ContentsName,
@@ -131,32 +138,127 @@ export async function getLostarkGameCalendar(): Promise<LostarkGameContent[]> {
 }
 
 // 데이터베이스에서 데이터 조회 함수들
-export async function getNoticesFromDB(limit = 10) {
+// 메모리 캐시 (5분)
+const noticesCache = { data: null as LostarkNotice[] | null, timestamp: 0 };
+const eventsCache = { data: null as LostarkEvent[] | null, timestamp: 0 };
+const gameContentsCache = { data: null as LostarkGameContent[] | null, timestamp: 0 };
+const CACHE_DURATION = 5 * 60 * 1000; // 5분
+
+// 캐시 초기화 함수
+export function clearGameContentsCache() {
+  gameContentsCache.data = null;
+  gameContentsCache.timestamp = 0;
+  console.log('🧹 게임 콘텐츠 캐시 초기화 완료');
+}
+
+export async function getNoticesFromDB(limit = 10): Promise<LostarkNotice[]> {
   try {
-    const query = `SELECT * FROM notices ORDER BY date DESC LIMIT ?`;
-    return await executeQuery(query, [limit]);
+    // 캐시 확인
+    if (noticesCache.data && Date.now() - noticesCache.timestamp < CACHE_DURATION) {
+      console.log('📦 공지사항 캐시에서 조회');
+      return noticesCache.data.slice(0, limit);
+    }
+    
+    console.log('🔍 공지사항 DB 조회 시작...');
+    const query = `SELECT title as Title, content as Thumbnail, link as Link, date as Date FROM notices ORDER BY date DESC LIMIT ${limit}`;
+    const result = await executeQuery(query, []);
+    console.log('✅ 공지사항 DB 조회 완료:', result.length, '개');
+    
+    // 캐시 업데이트
+    noticesCache.data = result as LostarkNotice[];
+    noticesCache.timestamp = Date.now();
+    
+    return result as LostarkNotice[];
   } catch (error) {
-    console.error('공지사항 조회 오류:', error);
+    console.error('❌ 공지사항 조회 오류:', error);
     return [];
   }
 }
 
-export async function getEventsFromDB(limit = 10) {
+export async function getEventsFromDB(limit = 10): Promise<LostarkEvent[]> {
   try {
-    const query = `SELECT * FROM events ORDER BY start_date DESC LIMIT ?`;
-    return await executeQuery(query, [limit]);
+    // 캐시 확인
+    if (eventsCache.data && Date.now() - eventsCache.timestamp < CACHE_DURATION) {
+      console.log('📦 이벤트 캐시에서 조회');
+      return eventsCache.data.slice(0, limit);
+    }
+    
+    console.log('🔍 이벤트 DB 조회 시작...');
+    const query = `SELECT title as Title, content as Thumbnail, link as Link, start_date as StartDate, end_date as EndDate FROM events ORDER BY start_date DESC LIMIT ${limit}`;
+    const result = await executeQuery(query, []);
+    console.log('✅ 이벤트 DB 조회 완료:', result.length, '개');
+    
+    // 캐시 업데이트
+    eventsCache.data = result as LostarkEvent[];
+    eventsCache.timestamp = Date.now();
+    
+    return result as LostarkEvent[];
   } catch (error) {
-    console.error('이벤트 조회 오류:', error);
+    console.error('❌ 이벤트 조회 오류:', error);
     return [];
   }
 }
 
-export async function getGameContentsFromDB() {
+export async function getGameContentsFromDB(): Promise<LostarkGameContent[]> {
   try {
-    const query = `SELECT * FROM game_contents ORDER BY created_at DESC`;
-    return await executeQuery(query);
+    console.log('🔍 getGameContentsFromDB 함수 시작...');
+    
+    // 캐시 확인
+    if (gameContentsCache.data && Date.now() - gameContentsCache.timestamp < CACHE_DURATION) {
+      console.log('📦 게임 콘텐츠 캐시에서 조회');
+      return gameContentsCache.data;
+    }
+    
+    console.log('🔍 게임 콘텐츠 DB 조회 시작...');
+    const query = `SELECT 
+      category_name as CategoryName,
+      contents_name as ContentsName,
+      contents_icon as ContentsIcon,
+      min_item_level as MinItemLevel,
+      location as Location,
+      start_times as StartTimes,
+      reward_items as RewardItems
+    FROM game_contents ORDER BY created_at DESC`;
+    
+    console.log('🔍 SQL 쿼리 실행:', query);
+    const result = await executeQuery(query, []); // 빈 배열 전달
+    
+    console.log('✅ 게임 콘텐츠 DB 조회 완료:', result.length, '개');
+    console.log('🔍 첫 번째 결과 샘플:', result[0]);
+    
+    // DB에서 이미 JSON 객체로 저장되어 있으므로 직접 사용
+    const parsedResult = result.map((item: any) => {
+      try {
+        return {
+          ...item,
+          StartTimes: Array.isArray(item.StartTimes) ? item.StartTimes : [],
+          RewardItems: Array.isArray(item.RewardItems) ? item.RewardItems : []
+        };
+      } catch (error) {
+        console.error('❌ 데이터 변환 오류 (아이템:', item.ContentsName || 'unknown', '):', error);
+        return {
+          ...item,
+          StartTimes: [],
+          RewardItems: []
+        };
+      }
+    }) as LostarkGameContent[];
+    
+    // 중복 제거: 같은 이름의 콘텐츠는 첫 번째만 유지
+    const uniqueResult = parsedResult.filter((item, index, self) => 
+      index === self.findIndex(i => i.ContentsName === item.ContentsName)
+    );
+    
+    console.log('🔍 중복 제거 전:', parsedResult.length, '개');
+    console.log('🔍 중복 제거 후:', uniqueResult.length, '개');
+    
+    // 캐시 업데이트
+    gameContentsCache.data = uniqueResult;
+    gameContentsCache.timestamp = Date.now();
+    
+    return uniqueResult;
   } catch (error) {
-    console.error('게임 콘텐츠 조회 오류:', error);
+    console.error('❌ 게임 콘텐츠 조회 오류:', error);
     return [];
   }
 }

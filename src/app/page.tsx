@@ -5,9 +5,10 @@ import Card from '@/components/Card';
 import GameContentCalendar from '@/components/GameContentCalendar';
 
 import {
-  getLostarkNotices,
-  getLostarkEvents,
-  getLostarkGameCalendar,
+  getNoticesFromDB,
+  getEventsFromDB,
+  getGameContentsFromDB,
+  clearGameContentsCache,
 } from '@/app/lib/api';
 
 import type {
@@ -20,19 +21,61 @@ import NoticesCard from '@/components/cards/NoticesCard';
 import EventsCard from '@/components/cards/EventsCard';
 import UpdatesCard from '@/components/cards/UpdatesCard';
 
+// 스켈레톤 로딩 컴포넌트
+function LoadingSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="h-4 bg-gray-300 rounded mb-2"></div>
+      <div className="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
+      <div className="h-4 bg-gray-300 rounded mb-2 w-1/2"></div>
+    </div>
+  );
+}
+
 export default async function HomePage() {
   let notices: LostarkNotice[] = [];
   let events: LostarkEvent[] = [];
   let calendar: LostarkGameContent[] = [];
 
   try {
-    [notices, events, calendar] = await Promise.all([
-      getLostarkNotices(5), // 10개
-      getLostarkEvents(10),  // 10개
-      getLostarkGameCalendar(),
+    console.log('🔄 메인 페이지: DB 데이터 조회 시작...');
+    
+    // 캐시 강제 초기화 (디버깅용)
+    clearGameContentsCache();
+    
+    const startTime = Date.now();
+    
+    // 병렬로 실행하되 타임아웃 설정
+    const timeout = 10000; // 10초로 늘림
+    
+    const [noticesResult, eventsResult, calendarResult] = await Promise.all([
+      Promise.race([
+        getNoticesFromDB(5),
+        new Promise<LostarkNotice[]>((_, reject) => setTimeout(() => reject(new Error('공지사항 조회 타임아웃')), timeout))
+      ]).catch(() => [] as LostarkNotice[]),
+      Promise.race([
+        getEventsFromDB(10),
+        new Promise<LostarkEvent[]>((_, reject) => setTimeout(() => reject(new Error('이벤트 조회 타임아웃')), timeout))
+      ]).catch(() => [] as LostarkEvent[]),
+      Promise.race([
+        getGameContentsFromDB(),
+        new Promise<LostarkGameContent[]>((_, reject) => setTimeout(() => reject(new Error('게임콘텐츠 조회 타임아웃')), timeout))
+      ]).catch(() => [] as LostarkGameContent[])
     ]);
+    
+    notices = noticesResult;
+    events = eventsResult;
+    calendar = calendarResult;
+    
+    const endTime = Date.now();
+    console.log('✅ 메인 페이지: DB 데이터 조회 완료');
+    console.log('⏱️ 소요시간:', endTime - startTime, 'ms');
+    console.log('📦 공지사항 개수:', notices.length);
+    console.log('📦 이벤트 개수:', events.length);
+    console.log('📦 게임콘텐츠 개수:', calendar.length);
+    
   } catch (error) {
-    console.error('Failed to fetch all data:', error);
+    console.error('❌ 메인 페이지: DB 데이터 조회 실패:', error);
     notices = [];
     events = [];
     calendar = [];
@@ -77,14 +120,22 @@ export default async function HomePage() {
               </Link>
             </h3>
             <div className="max-h-[360px] overflow-y-auto pr-2 text-explan-color">
-              <NoticesCard notices={notices} />
+              {notices.length > 0 ? (
+                <NoticesCard notices={notices} />
+              ) : (
+                <LoadingSkeleton />
+              )}
             </div>
           </Card>
 
           {/* 이벤트(이미지 그리드만, 스크롤바 숨김 + 페이드) */}
           <Card className="text-left">
             <div className="relative max-h-[360px] overflow-y-auto pr-2 scroll-invisible has-fade-overlay">
-              <EventsCard events={events} />
+              {events.length > 0 ? (
+                <EventsCard events={events} />
+              ) : (
+                <LoadingSkeleton />
+              )}
             </div>
           </Card>
 
@@ -100,7 +151,11 @@ export default async function HomePage() {
               </Link>
             </h3>
             <div className="max-h-[360px] overflow-y-auto pr-2 text-explan-color">
-              <UpdatesCard events={events} />
+              {events.length > 0 ? (
+                <UpdatesCard events={events} />
+              ) : (
+                <LoadingSkeleton />
+              )}
             </div>
           </Card>
         </div>

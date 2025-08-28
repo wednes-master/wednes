@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise';
 
-// 데이터베이스 연결 설정 (성능 최적화)
+// 데이터베이스 연결 설정 (안정성 최적화)
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
@@ -9,8 +9,11 @@ const dbConfig = {
   database: process.env.DB_NAME || 'wednes',
   charset: process.env.DB_CHARSET || 'utf8mb4',
   waitForConnections: true,
-  connectionLimit: parseInt(process.env.DB_POOL_MAX || '20'), // 연결 수 증가
-  queueLimit: 0,
+  connectionLimit: parseInt(process.env.DB_POOL_MAX || '10'), // 연결 수 줄임
+  queueLimit: 10, // 큐 제한 추가
+  acquireTimeout: 60000, // 연결 획득 타임아웃 60초
+  timeout: 60000, // 쿼리 타임아웃 60초
+  reconnect: true, // 자동 재연결
   // 성능 최적화 옵션 추가
   multipleStatements: false,
   dateStrings: true,
@@ -52,29 +55,58 @@ export async function testConnection() {
   }
 }
 
-// 쿼리 실행 함수
+// 쿼리 실행 함수 (재시도 로직 포함)
 export async function executeQuery<T = unknown>(query: string, params?: unknown[]): Promise<T[]> {
-  try {
-    // undefined 값을 null로 변환
-    const safeParams = params?.map(param => param === undefined ? null : param);
-    const [rows] = await pool.execute(query, safeParams);
-    return rows as T[];
-  } catch (error) {
-    console.error('쿼리 실행 오류:', error);
-    throw error;
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // 파라미터가 없거나 빈 배열인 경우 빈 배열로 처리
+      const safeParams = params && params.length > 0 
+        ? params.map(param => param === undefined ? null : param)
+        : [];
+      
+      const [rows] = await pool.execute(query, safeParams);
+      return rows as T[];
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`쿼리 실행 오류 (시도 ${attempt}/${maxRetries}):`, error);
+      console.error('쿼리:', query);
+      console.error('파라미터:', params);
+      
+      // ECONNRESET 오류인 경우 잠시 대기 후 재시도
+      if (error instanceof Error && error.message.includes('ECONNRESET') && attempt < maxRetries) {
+        console.log(`연결 재시도 중... (${attempt}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // 점진적 대기
+        continue;
+      }
+      
+      // 마지막 시도이거나 다른 오류인 경우
+      if (attempt === maxRetries) {
+        throw error;
+      }
+    }
   }
+  
+  throw lastError;
 }
 
 // 단일 행 조회
 export async function executeQuerySingle<T = unknown>(query: string, params?: unknown[]): Promise<T | null> {
   try {
-    // undefined 값을 null로 변환
-    const safeParams = params?.map(param => param === undefined ? null : param);
+    // 파라미터가 없거나 빈 배열인 경우 빈 배열로 처리
+    const safeParams = params && params.length > 0 
+      ? params.map(param => param === undefined ? null : param)
+      : [];
+    
     const [rows] = await pool.execute(query, safeParams);
     const results = rows as T[];
     return results.length > 0 ? results[0] : null;
   } catch (error) {
     console.error('쿼리 실행 오류:', error);
+    console.error('쿼리:', query);
+    console.error('파라미터:', params);
     throw error;
   }
 }

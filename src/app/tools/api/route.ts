@@ -60,13 +60,14 @@ function generatePriceHash(items: any[]): string {
   return items.map(item => `${item.Id}:${item.CurrentMinPrice}:${item.RecentPrice}`).join('|');
 }
 
-// 스마트 캐시
+// 스마트 캐시 (개선된 버전)
 const cache = new Map<string, { 
   data: any; 
   timestamp: number;
   priceHash?: string;
+  categoryCode?: number;
 }>();
-const CACHE_DURATION = 5000;
+const CACHE_DURATION = 3000; // 3초로 단축 (더 빠른 응답)
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now();
@@ -79,7 +80,16 @@ export async function GET(req: NextRequest) {
   let params: (string | number)[] = [];
   
   try {
+    // 캐시 키 생성 (카테고리별로 분리)
     const cacheKey = JSON.stringify({ keyword, categoryCode });
+    const cached = cache.get(cacheKey);
+    
+    // 캐시가 유효하고 최신인 경우 즉시 반환
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      const responseTime = Date.now() - startTime;
+      await saveApiLogToDB('/tools/api', 'GET', 200, responseTime);
+      return NextResponse.json(cached.data);
+    }
     
     try {
       const allCategories = [
